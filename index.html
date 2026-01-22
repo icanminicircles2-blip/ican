@@ -3,42 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Pro System</title>
+    <title>I CAN - V8</title>
     <style>
-        :root { --primary: #4361ee; --bg: #f8f9fa; }
-        body { font-family: system-ui, sans-serif; background-color: var(--bg); margin: 0; direction: rtl; }
-        .header { background: linear-gradient(135deg, #3f37c9, #4361ee); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; }
+        :root { --primary: #4361ee; --bg: #f8f9fa; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; direction: rtl; }
+        .header { background: linear-gradient(135deg, #3f37c9, #4361ee); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .grid-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
-        .item-card { background: white; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); cursor: pointer; border: 2px solid transparent; }
-        .has-goals { background: #eef2ff !important; border-color: var(--primary) !important; }
-        .list-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+        .item-card { background: var(--white); border-radius: 18px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); cursor: pointer; transition: 0.3s; border: 2px solid transparent; }
+        .has-goals { background: #eef2ff !important; border-color: var(--primary) !important; font-weight: bold; }
+        .list-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
         .goal-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--primary); }
         .select-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
         .custom-select { padding: 8px 4px; border-radius: 10px; border: 1px solid #eee; font-size: 11px; font-weight: bold; outline: none; text-align: center; }
         .input-group { display: flex; background: white; border-radius: 15px; padding: 5px; margin-bottom: 15px; border: 1px solid #eee; }
-        input[type="text"] { flex: 1; border: none; padding: 10px; outline: none; }
-        .btn-add { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; }
+        input[type="text"] { flex: 1; border: none; padding: 10px; outline: none; font-size: 15px; }
+        .btn-add { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; font-size: 20px; }
+        .btn-report { background: #2ec4b6; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; font-size: 14px; }
         .hidden { display: none; }
         .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 15px; border-radius: 10px; cursor: pointer; float: right; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #report-print-area, #report-print-area * { visibility: visible; }
+            #report-print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; direction: rtl; }
+            .no-print { display: none; }
+        }
+        #report-print-area { background: white; border-radius: 15px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .report-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .report-domain { margin-top: 15px; background: #f0f0f0; padding: 8px; border-radius: 5px; font-weight: bold; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .report-table td, .report-table th { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body>
+
 <div id="page-children">
     <div class="header"><h1>مركز I CAN</h1><p>قائمة الأطفال</p></div>
     <div class="container">
-        <div class="input-group"><input type="text" id="childInput" placeholder="اسم طفل جديد..."><button class="btn-add" onclick="addChild()">+</button></div>
+        <div class="input-group"><input type="text" id="childInput" placeholder="أضف اسم طفل جديد..."><button class="btn-add" onclick="addChild()">+</button></div>
         <div id="childrenList"></div>
     </div>
 </div>
+
 <div id="page-months" class="hidden">
-    <div class="header"><button class="back-btn" onclick="showPage('page-children')">رجوع</button><h2 id="childHeaderName"></h2><p>الشهور</p></div>
+    <div class="header"><button class="back-btn" onclick="showPage('page-children')">رجوع</button><h2 id="childHeaderName"></h2><p>اختر الشهر</p></div>
     <div class="container"><div class="grid-box" id="monthsGrid"></div></div>
 </div>
+
 <div id="page-domains" class="hidden">
     <div class="header"><button class="back-btn" onclick="showPage('page-months')">رجوع</button><h2 id="monthHeaderName"></h2><p>المجالات</p></div>
-    <div class="container"><div class="grid-box" id="domainsGrid"></div></div>
+    <div class="container">
+        <div class="grid-box" id="domainsGrid"></div>
+        <button class="btn-report" onclick="generateReport()">📄 تصدير تقرير أداء الشهر</button>
+        <div id="report-print-area" class="hidden"></div>
+    </div>
 </div>
+
 <div id="page-goals" class="hidden">
     <div class="header"><button class="back-btn" onclick="showPage('page-domains')">رجوع</button><h2 id="domainHeaderName"></h2><p>الأهداف</p></div>
     <div class="container">
@@ -46,25 +67,109 @@
         <div id="goalsList"></div>
     </div>
 </div>
+
 <script>
-    let db = JSON.parse(localStorage.getItem('ICAN_PRO_V5')) || [];
+    let db = JSON.parse(localStorage.getItem('ICAN_PRO_V8')) || [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "تركيز", "إدراك", "قراءة", "كتابة"];
+    
+    // قائمة المجالات المحدثة
+    const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
+    
     const helpOptions = ["FP", "PP", "FV", "PV", "M", "G", "P", "V"];
-    function save() { localStorage.setItem('ICAN_PRO_V5', JSON.stringify(db)); }
-    function addChild() { let v = document.getElementById('childInput').value.trim(); if(v){ db.push({name:v, months:{}}); save(); renderChildren(); document.getElementById('childInput').value=''; }}
-    function renderChildren() { document.getElementById('childrenList').innerHTML = db.map((c,i)=>`<div class="list-card" onclick="openMonths(${i})"><span>👤 ${c.name}</span><span onclick="event.stopPropagation();deleteItem('child',${i})" style="color:red">🗑️</span></div>`).join(''); }
-    function openMonths(i) { curC=i; document.getElementById('childHeaderName').innerText=db[i].name; document.getElementById('monthsGrid').innerHTML=months.map(m=>`<div class="item-card" onclick="openDomains('${m}')"><i>📅</i><span>${m}</span></div>`).join(''); showPage('page-months'); }
-    function openDomains(m) { curM=m; if(!db[curC].months[m]) db[curC].months[m]=domains.map(d=>({name:d, goals:[]})); document.getElementById('monthHeaderName').innerText="شهر "+m; renderDomains(); showPage('page-domains'); }
-    function renderDomains() { document.getElementById('domainsGrid').innerHTML=db[curC].months[curM].map((d,di)=>`<div class="item-card ${d.goals.length>0?'has-goals':''}" onclick="openGoals(${di})"><i>📁</i><span>${d.name}</span></div>`).join(''); }
-    function openGoals(di) { curD=di; document.getElementById('domainHeaderName').innerText=db[curC].months[curM][di].name; document.getElementById('goalDate').valueAsDate=new Date(); renderGoals(); showPage('page-goals'); }
-    function addGoal() { let t=document.getElementById('goalInput').value; let d=document.getElementById('goalDate').value; if(t){ db[curC].months[curM][curD].goals.push({text:t, date:d, help:'', prog:'', gen:''}); save(); renderGoals(); document.getElementById('goalInput').value=''; }}
-    function renderGoals() { document.getElementById('goalsList').innerHTML = db[curC].months[curM][curD].goals.map((g,i)=>`<div class="goal-card"><div style="display:flex;justify-content:space-between"><b>${g.text}</b><span onclick="deleteItem('goal',${i})" style="color:red">🗑️</span></div><span style="font-size:10px">📅 ${g.date}</span><div class="select-row">
-    <select class="custom-select" onchange="setG(${i},'help',this.value)"><option value="">مساعدة</option>${helpOptions.map(o=>`<option value="${o}" ${g.help==o?'selected':''}>${o}</option>`).join('')}</select>
-    <select class="custom-select" onchange="setG(${i},'prog',this.value)"><option value="">إنجاز</option>${['0','25','50','75','100'].map(n=>`<option value="${n}" ${g.prog==n?'selected':''}>${n}%</option>`).join('')}</select>
-    <select class="custom-select" onchange="setG(${i},'gen',this.value)"><option value="">تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join(''); }
+
+    function save() { localStorage.setItem('ICAN_PRO_V8', JSON.stringify(db)); }
+
+    function addChild() { 
+        let v = document.getElementById('childInput').value.trim(); 
+        if(v){ db.push({name:v, months:{}}); save(); renderChildren(); document.getElementById('childInput').value=''; }
+    }
+
+    function renderChildren() { 
+        document.getElementById('childrenList').innerHTML = db.map((c,i)=>`<div class="list-card" onclick="openMonths(${i})"><span>👤 ${c.name}</span><span onclick="event.stopPropagation();deleteItem('child',${i})" style="color:red">🗑️</span></div>`).join(''); 
+    }
+
+    function openMonths(i) { 
+        curC=i; document.getElementById('childHeaderName').innerText=db[i].name; 
+        document.getElementById('monthsGrid').innerHTML=months.map(m=>`<div class="item-card" style="border-bottom: 2px solid var(--primary)" onclick="openDomains('${m}')"><i>📅</i><span>${m}</span></div>`).join(''); 
+        showPage('page-months'); 
+    }
+
+    function openDomains(m) { 
+        curM=m; if(!db[curC].months[m]) db[curC].months[m]=domains.map(d=>({name:d, goals:[]})); 
+        document.getElementById('monthHeaderName').innerText="شهر "+m; 
+        document.getElementById('report-print-area').classList.add('hidden');
+        renderDomains(); showPage('page-domains'); 
+    }
+
+    function renderDomains() { 
+        document.getElementById('domainsGrid').innerHTML=db[curC].months[curM].map((d,di)=>`<div class="item-card ${d.goals.length>0?'has-goals':''}" onclick="openGoals(${di})"><i>📁</i><span>${d.name}</span></div>`).join(''); 
+    }
+
+    function openGoals(di) { 
+        curD=di; document.getElementById('domainHeaderName').innerText=db[curC].months[curM][di].name; 
+        document.getElementById('goalDate').valueAsDate=new Date(); renderGoals(); showPage('page-goals'); 
+    }
+
+    function addGoal() { 
+        let t=document.getElementById('goalInput').value; let d=document.getElementById('goalDate').value; 
+        if(t){ db[curC].months[curM][curD].goals.push({text:t, date:d, help:'', prog:'', gen:''}); save(); renderGoals(); document.getElementById('goalInput').value=''; }
+    }
+
+    function renderGoals() { 
+        document.getElementById('goalsList').innerHTML = db[curC].months[curM][curD].goals.map((g,i)=>`<div class="goal-card"><div style="display:flex;justify-content:space-between"><b>${g.text}</b><span onclick="deleteItem('goal',${i})" style="color:red">🗑️</span></div><span style="font-size:10px">📅 ${g.date}</span><div class="select-row">
+        <select class="custom-select" onchange="setG(${i},'help',this.value)"><option value="">مساعدة</option>${helpOptions.map(o=>`<option value="${o}" ${g.help==o?'selected':''}>${o}</option>`).join('')}</select>
+        <select class="custom-select" onchange="setG(${i},'prog',this.value)"><option value="">إنجاز</option>${['0','25','50','75','100'].map(n=>`<option value="${n}" ${g.prog==n?'selected':''}>${n}%</option>`).join('')}</select>
+        <select class="custom-select" onchange="setG(${i},'gen',this.value)"><option value="">تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join(''); 
+    }
+
     function setG(i,f,v){ db[curC].months[curM][curD].goals[i][f]=v; save(); }
+
+    function generateReport() {
+        const child = db[curC];
+        const monthData = child.months[curM];
+        let reportHTML = `
+            <div class="report-header">
+                <h2>تقرير أداء شهري - مركز I CAN</h2>
+                <p><b>اسم الطفل:</b> ${child.name} &nbsp;&nbsp; | &nbsp;&nbsp; <b>الشهر:</b> ${curM}</p>
+            </div>`;
+
+        let foundData = false;
+        monthData.forEach(domain => {
+            if(domain.goals.length > 0) {
+                foundData = true;
+                reportHTML += `<div class="report-domain">${domain.name}</div>
+                <table class="report-table">
+                    <thead><tr><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th><th>التعميم</th><th>التاريخ</th></tr></thead>
+                    <tbody>`;
+                domain.goals.forEach(goal => {
+                    reportHTML += `<tr>
+                        <td>${goal.text}</td>
+                        <td>${goal.help || '-'}</td>
+                        <td>${goal.prog ? goal.prog+'%' : '-'}</td>
+                        <td>${goal.gen || '-'}</td>
+                        <td>${goal.date}</td>
+                    </tr>`;
+                });
+                reportHTML += `</tbody></table>`;
+            }
+        });
+
+        if(!foundData) {
+            alert("لا يوجد أهداف مسجلة لهذا الشهر لإصدار تقرير.");
+            return;
+        }
+
+        reportHTML += `<div class="no-print" style="margin-top:20px; text-align:center;">
+            <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; border-radius:10px; cursor:pointer;">🖨️ طباعة أو حفظ PDF</button>
+        </div>`;
+
+        const reportArea = document.getElementById('report-print-area');
+        reportArea.innerHTML = reportHTML;
+        reportArea.classList.remove('hidden');
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
     function deleteItem(t,i){ if(confirm('متأكد؟')){ if(t=='child')db.splice(i,1); else db[curC].months[curM][curD].goals.splice(i,1); save(); t=='child'?renderChildren():renderGoals(); }}
     function showPage(id){ document.querySelectorAll('body > div').forEach(d=>d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     renderChildren();
