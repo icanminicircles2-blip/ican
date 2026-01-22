@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>I CAN - Advanced System</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --success: #2ec4b6;
+            --bg: #f8f9fa;
+            --white: #ffffff;
+            --active-glow: rgba(67, 97, 238, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            margin: 0; padding: 0; color: #2b2d42;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3f37c9, #4361ee);
+            color: white; padding: 20px; text-align: center;
+            border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+        .grid-box {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-top: 15px;
+        }
+
+        .item-card {
+            background: var(--white); border-radius: 18px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            cursor: pointer; transition: 0.3s; border: 2px solid transparent;
+        }
+
+        /* «·„Ã·œ «·„‰Ê— –ﬂÌ« */
+        .has-goals {
+            background: #eef2ff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 15px var(--active-glow) !important;
+        }
+        .has-goals span { color: var(--primary) !important; font-weight: 800; }
+
+        .list-card {
+            background: white; border-radius: 15px; padding: 18px;
+            margin-bottom: 10px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer; font-weight: bold;
+        }
+
+        .goal-card {
+            background: white; border-radius: 15px; padding: 15px;
+            margin-bottom: 12px; border-right: 5px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        /* ’› «·«Œ Ì«—«  «·À·«ÀÌ */
+        .select-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            margin-top: 12px; 
+        }
+
+        .custom-select {
+            padding: 8px 4px; border-radius: 10px;
+            border: 1px solid #eee; background: #fdfdfd;
+            font-size: 11px; font-weight: bold; outline: none;
+            text-align: center; cursor: pointer;
+        }
+
+        .custom-select.active-val { border-color: var(--primary); background: #f0f3ff; color: var(--primary); }
+
+        .input-group {
+            display: flex; background: white; border-radius: 15px;
+            padding: 5px; margin-bottom: 15px; border: 1px solid #eee;
+        }
+
+        input[type="text"] { flex: 1; border: none; padding: 10px; outline: none; font-size: 15px; background: transparent; }
+        .btn-add { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; font-size: 20px; }
+
+        .hidden { display: none; }
+        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 15px; border-radius: 10px; cursor: pointer; float: right; }
+        
+        .label-mini { font-size: 9px; color: #999; margin-bottom: 2px; display: block; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="page-children">
+    <div class="header"><h1>„—ﬂ“ I CAN</h1><p>ﬁ«∆„… «·√ÿ›«·</p></div>
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="childInput" placeholder="√÷› «”„ ÿ›· ÃœÌœ...">
+            <button class="btn-add" onclick="addChild()">+</button>
+        </div>
+        <div id="childrenList"></div>
+    </div>
+</div>
+
+<div id="page-months" class="hidden">
+    <div class="header"><button class="back-btn" onclick="showPage('page-children')">—ÃÊ⁄</button><h2 id="childHeaderName"></h2><p>«Œ — «·‘Â—</p></div>
+    <div class="container"><div class="grid-box" id="monthsGrid"></div></div>
+</div>
+
+<div id="page-domains" class="hidden">
+    <div class="header"><button class="back-btn" onclick="showPage('page-months')">—ÃÊ⁄</button><h2 id="monthHeaderName"></h2><p>«·„Ã«·« </p></div>
+    <div class="container"><div class="grid-box" id="domainsGrid"></div></div>
+</div>
+
+<div id="page-goals" class="hidden">
+    <div class="header"><button class="back-btn" onclick="showPage('page-domains')">—ÃÊ⁄</button><h2 id="domainHeaderName"></h2><p>«·√Âœ«›</p></div>
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="goalInput" placeholder="«ﬂ » «·Âœ›...">
+            <input type="date" id="goalDate" style="width:40px; border:none; background:transparent;">
+            <button class="btn-add" onclick="addGoal()">+</button>
+        </div>
+        <div id="goalsList"></div>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('ICAN_FINAL_V4')) || [];
+    let curC = null, curM = null, curD = null;
+
+    const months = ["Ì‰«Ì—", "›»—«Ì—", "„«—”", "√»—Ì·", "„«ÌÊ", "ÌÊ‰ÌÊ", "ÌÊ·ÌÊ", "√€”ÿ”", "”» „»—", "√ﬂ Ê»—", "‰Ê›„»—", "œÌ”„»—"];
+    const domains = [" Œ«ÿ»", " ‰„Ì… „Â«—« ", "—⁄«Ì… –« Ì…", "ÊŸÌ›Ì", "Õ—ﬂÌ", "√ﬂ«œÌ„Ì", "«Ã „«⁄Ì", "”·ÊﬂÌ", " —ﬂÌ“", "≈œ—«ﬂ", "ﬁ—«¡…", "ﬂ «»…"];
+    const helpOptions = ["FP", "PP", "FV", "PV", "M", "G", "P", "V"];
+
+    function save() { localStorage.setItem('ICAN_FINAL_V4', JSON.stringify(db)); }
+
+    function addChild() {
+        let val = document.getElementById('childInput').value.trim();
+        if(val) { db.push({ name: val, months: {} }); save(); renderChildren(); document.getElementById('childInput').value = ''; }
+    }
+
+    function renderChildren() {
+        document.getElementById('childrenList').innerHTML = db.map((c, i) => `
+            <div class="list-card" onclick="openMonths(${i})">
+                <span>?? ${c.name}</span>
+                <span onclick="event.stopPropagation(); deleteItem('child', ${i})" style="color:red; opacity:0.5">???</span>
+            </div>
+        `).join('');
+    }
+
+    function openMonths(i) {
+        curC = i; document.getElementById('childHeaderName').innerText = db[i].name;
+        document.getElementById('monthsGrid').innerHTML = months.map(m => `
+            <div class="item-card" style="border-bottom: 3px solid #4361ee" onclick="openDomains('${m}')"><i>??</i><span>${m}</span></div>
+        `).join('');
+        showPage('page-months');
+    }
+
+    function openDomains(m) {
+        curM = m; if(!db[curC].months[m]) db[curC].months[m] = domains.map(d => ({ name: d, goals: [] }));
+        document.getElementById('monthHeaderName').innerText = "‘Â— " + m;
+        renderDomains();
+        showPage('page-domains');
+    }
+
+    function renderDomains() {
+        document.getElementById('domainsGrid').innerHTML = db[curC].months[curM].map((d, di) => {
+            const hasGoals = d.goals && d.goals.length > 0;
+            return `
+            <div class="item-card ${hasGoals ? 'has-goals' : ''}" onclick="openGoals(${di})">
+                <i>${hasGoals ? '??' : '??'}</i>
+                <span>${d.name}</span>
+            </div>`;
+        }).join('');
+    }
+
+    function openGoals(di) {
+        curD = di; document.getElementById('domainHeaderName').innerText = db[curC].months[curM][di].name;
+        document.getElementById('goalDate').valueAsDate = new Date();
+        renderGoals();
+        showPage('page-goals');
+    }
+
+    function addGoal() {
+        let t = document.getElementById('goalInput').value;
+        let d = document.getElementById('goalDate').value;
+        if(t) {
+            db[curC].months[curM][curD].goals.push({ text: t, date: d, help: '', prog: '', gen: '' });
+            save(); renderGoals(); document.getElementById('goalInput').value = '';
+        }
+    }
+
+    function renderGoals() {
+        const list = document.getElementById('goalsList');
+        list.innerHTML = db[curC].months[curM][curD].goals.map((g, i) => `
+            <div class="goal-card">
+                <div style="display:flex; justify-content:space-between"><b>${g.text}</b><span onclick="deleteItem('goal', ${i})" style="color:red">???</span></div>
+                <span class="goal-date">?? ${g.date}</span>
+                
+                <div class="select-row">
+                    <div>
+                        <span class="label-mini">«·„”«⁄œ…</span>
+                        <select class="custom-select ${g.help?'active-val':''}" onchange="setG(${i}, 'help', this.value)">
+                            <option value="">-</option>
+                            ${helpOptions.map(opt => `<option value="${opt}" ${g.help==opt?'selected':''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <span class="label-mini">«·≈‰Ã«“</span>
+                        <select class="custom-select ${g.prog?'active-val':''}" onchange="setG(${i}, 'prog', this.value)">
+                            <option value="">-</option>
+                            ${['0','25','50','75','100'].map(n => `<option value="${n}" ${g.prog==n?'selected':''}>${n}%</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div>
+                        <span class="label-mini">«· ⁄„Ì„</span>
+                        <select class="custom-select ${g.gen?'active-val':''}" onchange="setG(${i}, 'gen', this.value)">
+                            <option value="">-</option>
+                            <option value="‰⁄„" ${g.gen=='‰⁄„'?'selected':''}>‰⁄„</option>
+                            <option value="·«" ${g.gen=='·«'?'selected':''}>·«</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function setG(i, f, v) { 
+        db[curC].months[curM][curD].goals[i][f] = v; 
+        save(); 
+        renderGoals(); // ≈⁄«œ… «·—‰œ— · ÕœÌÀ «·√·Ê«‰
+    }
+
+    function deleteItem(type, i) {
+        if(confirm('„ √ﬂœø')) {
+            if(type === 'child') db.splice(i,1);
+            else db[curC].months[curM][curD].goals.splice(i,1);
+            save(); 
+            if(type === 'child') renderChildren(); else renderGoals();
+        }
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    renderChildren();
+</script>
+
+</body>
+</html>
