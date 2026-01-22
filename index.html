@@ -3,212 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Realtime System</title>
-
+    <title>I CAN - Pro System</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
     <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #2ec4b6;
-            --bg: #f8f9fa;
-            --white: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            direction: rtl;
-            color: #333;
-        }
-
-        /* الهيدر العلوي */
-        .header {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .container {
-            padding: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* أدوات الإدخال */
-        .input-group {
-            display: flex;
-            background: white;
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        input[type="text"] {
-            flex: 1;
-            border: none;
-            padding: 12px;
-            outline: none;
-            font-size: 16px;
-        }
-
-        .btn-add {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 24px;
-        }
-
-        /* البطاقات والشبكة */
-        .grid-box {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .item-card {
-            background: white;
-            border-radius: 18px;
-            padding: 15px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: 0.2s;
-        }
-
-        .item-card:active { transform: scale(0.95); }
-
-        .has-goals {
-            background: #eef2ff !important;
-            border-color: var(--primary) !important;
-        }
-
-        .list-card {
-            background: white;
-            border-radius: 15px;
-            padding: 18px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .goal-card {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-right: 5px solid var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
-
-        .select-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .custom-select {
-            padding: 8px 2px;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            font-size: 11px;
-            font-weight: bold;
-            text-align: center;
-            outline: none;
-        }
-
-        .btn-report {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 15px;
-            width: 100%;
-            margin-top: 15px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
+        :root { --primary: #4361ee; --secondary: #3f37c9; --success: #2ec4b6; --bg: #f8f9fa; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; direction: rtl; color: #333; }
+        .header { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .input-group { display: flex; background: white; border-radius: 15px; padding: 5px; margin-bottom: 20px; border: 1px solid #eee; }
+        input[type="text"] { flex: 1; border: none; padding: 12px; outline: none; font-size: 16px; }
+        .btn-add { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 24px; }
+        .grid-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .item-card { background: white; border-radius: 18px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); cursor: pointer; transition: 0.2s; }
+        .has-goals { background: #eef2ff !important; border-color: var(--primary) !important; font-weight: bold; border: 2px solid var(--primary); }
+        .list-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; font-weight: bold; }
+        .goal-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .select-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        .custom-select { padding: 8px 2px; border-radius: 8px; border: 1px solid #eee; font-size: 11px; font-weight: bold; text-align: center; outline: none; }
+        .btn-report { background: var(--success); color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
         .hidden { display: none; }
-
-        .back-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            float: right;
-        }
-
-        /* التقرير للطباعة */
-        #report-area {
-            background: white;
-            padding: 20px;
-            margin-top: 20px;
-            border-radius: 15px;
-            border: 1px solid #ddd;
-        }
-
-        @media print {
-            body * { visibility: hidden; }
-            #report-area, #report-area * { visibility: visible; }
-            #report-area { position: absolute; top: 0; left: 0; width: 100%; }
-        }
+        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 15px; border-radius: 10px; cursor: pointer; float: right; }
+        #report-area { background: white; padding: 20px; margin-top: 20px; border-radius: 15px; border: 1px solid #ddd; }
+        @media print { body * { visibility: hidden; } #report-area, #report-area * { visibility: visible; } #report-area { position: absolute; top: 0; left: 0; width: 100%; } }
     </style>
 </head>
 <body>
 
 <div id="page-children">
-    <div class="header">
-        <h1>مركز I CAN</h1>
-        <p>نظام المزامنة السحابي (نشط ✅)</p>
-    </div>
+    <div class="header"><h1>مركز I CAN</h1><p>قائمة الأطفال</p></div>
     <div class="container">
-        <div class="input-group">
-            <input type="text" id="childInput" placeholder="اسم طفل جديد...">
-            <button class="btn-add" onclick="addChild()">+</button>
-        </div>
-        <div id="childrenList">جاري تحميل البيانات...</div>
+        <div class="input-group"><input type="text" id="childInput" placeholder="اسم طفل جديد..."><button class="btn-add" onclick="addChild()">+</button></div>
+        <div id="childrenList">جاري التحميل...</div>
     </div>
 </div>
 
 <div id="page-months" class="hidden">
-    <div class="header">
-        <button class="back-btn" onclick="showPage('page-children')">رجوع</button>
-        <h2 id="childHeaderName"></h2>
-        <p>الشهور</p>
-    </div>
+    <div class="header"><button class="back-btn" onclick="showPage('page-children')">رجوع</button><h2 id="childHeaderName"></h2><p>اختر الشهر</p></div>
     <div class="container"><div class="grid-box" id="monthsGrid"></div></div>
 </div>
 
 <div id="page-domains" class="hidden">
-    <div class="header">
-        <button class="back-btn" onclick="showPage('page-months')">رجوع</button>
-        <h2 id="monthHeaderName"></h2>
-        <p>المجالات</p>
-    </div>
+    <div class="header"><button class="back-btn" onclick="showPage('page-months')">رجوع</button><h2 id="monthHeaderName"></h2><p>المجالات</p></div>
     <div class="container">
         <div class="grid-box" id="domainsGrid"></div>
         <button class="btn-report" onclick="generateReport()">📄 تصدير تقرير الشهر</button>
@@ -217,11 +53,7 @@
 </div>
 
 <div id="page-goals" class="hidden">
-    <div class="header">
-        <button class="back-btn" onclick="showPage('page-domains')">رجوع</button>
-        <h2 id="domainHeaderName"></h2>
-        <p>الأهداف</p>
-    </div>
+    <div class="header"><button class="back-btn" onclick="showPage('page-domains')">رجوع</button><h2 id="domainHeaderName"></h2><p>الأهداف</p></div>
     <div class="container">
         <div class="input-group">
             <input type="text" id="goalInput" placeholder="اكتب الهدف...">
@@ -233,40 +65,23 @@
 </div>
 
 <script>
-    // ********************************************************
-    // إعدادات FIREBASE - استبدل القيم التالية ببياناتك الخاصة
-    // ********************************************************
-    const firebaseConfig = {
-        apiKey: "ضع_هنا_الـ_API_KEY",
-        authDomain: "ضع_هنا_الـ_AUTH_DOMAIN",
-        databaseURL: "ضع_هنا_الـ_DATABASE_URL",
-        projectId: "ضع_هنا_الـ_PROJECT_ID",
-        storageBucket: "ضع_هنا_الـ_STORAGE_BUCKET",
-        messagingSenderId: "ضع_هنا_الـ_SENDER_ID",
-        appId: "ضع_هنا_الـ_APP_ID"
-    };
+    // --- بيانات الـ Firebase (امسح السطور اللي تحت دي وحط بياناتك لما تجهز) ---
+    const firebaseConfig = { apiKey: "" }; 
+    // ------------------------------------------------------------------------
 
-    // تشغيل Firebase
-    firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_data');
-
-    let db = [];
+    let db = JSON.parse(localStorage.getItem('ICAN_V9_DATA')) || [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
+    const domainsList = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
     const helpOptions = ["FP", "PP", "FV", "PV", "M", "G", "P", "V"];
 
-    // المزامنة اللحظية: أي تغيير في الداتابيز هيسمع هنا فوراً
-    dbRef.on('value', (snapshot) => {
-        db = snapshot.val() || [];
+    // وظيفة الحفظ (بتحفظ في الجهاز وتحدث الشاشة)
+    function save() {
+        localStorage.setItem('ICAN_V9_DATA', JSON.stringify(db));
         renderChildren();
-        if(curC !== undefined) {
-            if(curM) renderDomains();
-            if(curD !== undefined) renderGoals();
-        }
-    });
-
-    function save() { dbRef.set(db); }
+        if(curC !== undefined && curM) renderDomains();
+        if(curD !== undefined) renderGoals();
+    }
 
     function addChild() {
         let v = document.getElementById('childInput').value.trim();
@@ -292,7 +107,7 @@
 
     function openDomains(m) {
         curM=m; if(!db[curC].months) db[curC].months = {};
-        if(!db[curC].months[m]) db[curC].months[m]=domains.map(d=>({name:d, goals:[]}));
+        if(!db[curC].months[m]) db[curC].months[m]=domainsList.map(d=>({name:d, goals:[]}));
         document.getElementById('monthHeaderName').innerText="شهر "+m;
         document.getElementById('report-area').classList.add('hidden');
         renderDomains(); showPage('page-domains');
@@ -311,7 +126,7 @@
     }
 
     function addGoal() {
-        let t=document.getElementById('goalInput').value; let d=document.getElementById('goalDate').value;
+        let t=document.getElementById('goalInput').value.trim(); let d=document.getElementById('goalDate').value;
         if(t){
             if(!db[curC].months[curM][curD].goals) db[curC].months[curM][curD].goals = [];
             db[curC].months[curM][curD].goals.push({text:t, date:d, help:'', prog:'', gen:''});
@@ -324,7 +139,6 @@
         document.getElementById('goalsList').innerHTML = goals.map((g,i)=>`
             <div class="goal-card">
                 <div style="display:flex;justify-content:space-between"><b>${g.text}</b><span onclick="deleteItem('goal',${i})" style="color:red">🗑️</span></div>
-                <div style="font-size:10px; color:#888">📅 ${g.date}</div>
                 <div class="select-row">
                     <select class="custom-select" onchange="setG(${i},'help',this.value)"><option value="">مساعدة</option>${helpOptions.map(o=>`<option value="${o}" ${g.help==o?'selected':''}>${o}</option>`).join('')}</select>
                     <select class="custom-select" onchange="setG(${i},'prog',this.value)"><option value="">إنجاز</option>${['0','25','50','75','100'].map(n=>`<option value="${n}" ${g.prog==n?'selected':''}>${n}%</option>`).join('')}</select>
@@ -337,25 +151,28 @@
 
     function generateReport() {
         const child = db[curC]; const mData = child.months[curM];
-        let html = `<div style="text-align:center;border-bottom:2px solid #333"><h2>تقرير أداء: ${child.name}</h2><p>شهر: ${curM}</p></div>`;
+        let html = `<div style="text-align:center;border-bottom:2px solid #333"><h3>تقرير أداء الشهر: ${child.name}</h3></div>`;
         let found = false;
         mData.forEach(d => {
             if(d.goals && d.goals.length > 0) {
                 found = true;
-                html += `<div style="background:#eee;padding:5px;margin-top:10px;font-weight:bold">${d.name}</div><table border="1" style="width:100%;border-collapse:collapse;font-size:12px">
+                html += `<div style="background:#f0f0f0;padding:5px;margin-top:10px;font-weight:bold">${d.name}</div><table border="1" style="width:100%;border-collapse:collapse;font-size:12px">
                     <tr><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th><th>التعميم</th></tr>`;
                 d.goals.forEach(g => { html += `<tr><td>${g.text}</td><td align="center">${g.help||'-'}</td><td align="center">${g.prog?g.prog+'%':'-'}</td><td align="center">${g.gen||'-'}</td></tr>`; });
                 html += `</table>`;
             }
         });
-        if(!found) return alert("لا يوجد أهداف.");
-        html += `<div style="text-align:center;margin-top:20px" class="no-print"><button onclick="window.print()">🖨️ طباعة التقرير</button></div>`;
+        if(!found) return alert("لا يوجد بيانات لهذا الشهر.");
+        html += `<div style="text-align:center;margin-top:20px" class="no-print"><button onclick="window.print()">🖨️ طباعة</button></div>`;
         document.getElementById('report-area').innerHTML = html;
         document.getElementById('report-area').classList.remove('hidden');
     }
 
     function deleteItem(t,i){ if(confirm('متأكد؟')){ if(t=='child')db.splice(i,1); else db[curC].months[curM][curD].goals.splice(i,1); save(); }}
     function showPage(id){ document.querySelectorAll('body > div').forEach(d=>d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    
+    // تشغيل الصفحة الأولى عند الفتح
+    renderChildren();
 </script>
 </body>
 </html>
