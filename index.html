@@ -3,59 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Pro Sync</title>
+    <title>I CAN - ROYAL SYNC</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #4361ee; --success: #2ec4b6; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); direction: rtl; margin: 0; }
-        .header { background: #3f37c9; color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; }
-        .status-bar { background: #333; color: #fff; font-size: 11px; text-align: center; padding: 5px; position: sticky; top: 0; z-index: 100; }
+        .header { background: linear-gradient(135deg, #3f37c9, #4361ee); color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .status-bar { background: #333; color: #fff; font-size: 11px; text-align: center; padding: 6px; position: sticky; top: 0; z-index: 100; font-weight: bold; }
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-item { background: white; padding: 18px 5px; text-align: center; border-radius: 12px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .btn-item.active { background: #eef2ff; border-bottom-color: var(--primary); color: var(--primary); }
-        .goal-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 3px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
+        .btn-item { background: white; padding: 20px 5px; text-align: center; border-radius: 15px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .btn-item.active { background: #eef2ff; border-bottom-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .goal-box { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; border-right: 6px solid var(--primary); box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
         .hidden { display: none; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
-        .back-btn { float: left; color: white; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #eee; flex: 1; font-size: 11px; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; margin-bottom: 10px; transition: 0.3s; }
+        .btn-main:active { transform: scale(0.98); background: #3f37c9; }
+        input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #eee; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); }
+        .back-btn { float: left; color: white; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #eee; flex: 1; font-size: 12px; background: #fbfbfb; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 15px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; font-size: 13px; }
+        th { background: #f4f7fe; color: #333; }
     </style>
 </head>
 <body>
 
-<div id="status" class="status-bar">جاري المزامنة...</div>
+<div id="status" class="status-bar">⏳ جاري الاتصال بالسحابة...</div>
 
 <div id="p1">
-    <div class="header"><h1>I CAN Center</h1><p>نظام إدارة الأطفال</p></div>
+    <div class="header"><h1>I CAN Center 👤</h1><p>نظام المتابعة المتكامل</p></div>
     <div class="container">
-        <input type="text" id="cIn" placeholder="اسم الطفل الجديد...">
-        <button class="btn-main" onclick="addC()">إضافة طفل +</button>
+        <input type="text" id="cIn" placeholder="اكتب اسم الطفل الجديد...">
+        <button class="btn-main" onclick="addC()">إضافة طفل جديد + 👤</button>
         <div id="cList"></div>
     </div>
 </div>
 
 <div id="p2" class="hidden">
-    <div class="header"><span class="back-btn" onclick="goP('p1')">رجوع</span><h2 id="cTitle"></h2></div>
+    <div class="header"><span class="back-btn" onclick="goP('p1')">🔙 رجوع</span><h2 id="cTitle"></h2></div>
     <div class="container"><div class="grid" id="mGrid"></div></div>
 </div>
 
 <div id="p3" class="hidden">
-    <div class="header"><span class="back-btn" onclick="goP('p2')">رجوع</span><h2 id="mTitle"></h2></div>
+    <div class="header"><span class="back-btn" onclick="goP('p2')">🔙 رجوع</span><h2 id="mTitle"></h2></div>
     <div class="container">
         <div class="grid" id="dGrid"></div>
-        <button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 عرض تقرير الشهر</button>
+        <button class="btn-main" style="background:var(--success); margin-top:25px;" onclick="makeReport()">📄 استخراج تقرير الشهر</button>
         <div id="reportArea" class="hidden"></div>
     </div>
 </div>
 
 <div id="p4" class="hidden">
-    <div class="header"><span class="back-btn" onclick="goP('p3')">رجوع</span><h2 id="dTitle"></h2></div>
+    <div class="header"><span class="back-btn" onclick="goP('p3')">🔙 رجوع</span><h2 id="dTitle"></h2></div>
     <div class="container">
-        <input type="text" id="gIn" placeholder="اكتب الهدف الجديد...">
-        <button class="btn-main" id="saveGoalBtn" onclick="addG()">حفظ الهدف الآن ✅</button>
+        <input type="text" id="gIn" placeholder="اكتب الهدف هنا...">
+        <button class="btn-main" onclick="addG()">حفظ الهدف الآن ✅</button>
         <div id="gList"></div>
     </div>
 </div>
@@ -72,24 +77,22 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_final_sync');
+    const dbRef = firebase.database().ref('ican_v6_final');
 
     let db = [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
-    // مزامنة حية وشاملة
+    // المزامنة الحية
     dbRef.on('value', (snap) => {
         db = snap.val() || [];
-        document.getElementById('status').innerHTML = "✅ متصل لحظياً";
+        document.getElementById('status').innerHTML = "✅ متصل بالسحابة (جاهز)";
         document.getElementById('status').style.background = "#2ec4b6";
-        
-        // التحديث الذكي لواجهة المستخدم
         renderC();
         if (curC !== undefined) {
-            if (document.getElementById('p3').classList.contains('hidden') === false) renderD();
-            if (document.getElementById('p4').classList.contains('hidden') === false) renderG();
+            if (!document.getElementById('p3').classList.contains('hidden')) renderD();
+            if (!document.getElementById('p4').classList.contains('hidden')) renderG();
         }
     });
 
@@ -102,103 +105,87 @@
 
     function renderC() {
         document.getElementById('cList').innerHTML = db.map((c,i)=>`
-            <div class="card" onclick="openM(${i})"><span>👤 ${c.name}</span><button onclick="event.stopPropagation();delC(${i})" style="border:none;background:none;color:red;font-size:18px;">🗑️</button></div>
+            <div class="card" onclick="openM(${i})">
+                <span>👤 ${c.name}</span>
+                <button onclick="event.stopPropagation();delC(${i})" style="border:none;background:none;color:red;font-size:20px;cursor:pointer;">🗑️</button>
+            </div>
         `).join('');
     }
 
-    function delC(i) { if(confirm('حذف الطفل؟')){ db.splice(i,1); save(); } }
+    function delC(i) { if(confirm('هل تريد حذف الطفل وبياناته؟')){ db.splice(i,1); save(); } }
 
     function openM(i) {
-        curC=i; document.getElementById('cTitle').innerText=db[i].name;
-        document.getElementById('mGrid').innerHTML=months.map(m=>`<div class="btn-item" onclick="openD('${m}')">📅<br>${m}</div>`).join('');
+        curC=i; document.getElementById('cTitle').innerText = "👤 " + db[i].name;
+        document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="btn-item" onclick="openD('${m}')">📅<br>${m}</div>`).join('');
         goP('p2');
     }
 
     function openD(m) {
-        curM=m; document.getElementById('mTitle').innerText="شهر "+m;
+        curM=m; document.getElementById('mTitle').innerText = "📅 شهر " + m;
         renderD();
         document.getElementById('reportArea').classList.add('hidden');
         goP('p3');
     }
 
     function renderD() {
-        document.getElementById('dGrid').innerHTML=domains.map(d=>{
+        document.getElementById('dGrid').innerHTML = domains.map(d => {
             let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
             return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">📁<br>${d}</div>`;
         }).join('');
     }
 
     function openG(d) {
-        curD=d; document.getElementById('dTitle').innerText=d; 
-        renderG(); 
+        curD=d; document.getElementById('dTitle').innerText = "📁 مجال: " + d;
+        renderG();
         goP('p4');
     }
 
     function addG() {
         let txt = document.getElementById('gIn').value.trim();
         if(!txt) return;
-
         if(!db[curC].data) db[curC].data = {};
         if(!db[curC].data[curM]) db[curC].data[curM] = {};
         if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
         
-        // 1. إضافة الهدف محلياً فوراً
         db[curC].data[curM][curD].push({txt:txt, help:'', prog:'0', gen:''});
-        
-        // 2. تحديث الواجهة فوراً قبل ما السيرفر يرد
-        renderG();
-        document.getElementById('gIn').value = '';
-
-        // 3. الحفظ في السيرفر
         save();
+        document.getElementById('gIn').value = '';
+        renderG(); // تحديث فوري
     }
 
     function renderG() {
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
-        let listArea = document.getElementById('gList');
-        listArea.innerHTML = goals.map((g,i)=>`
+        document.getElementById('gList').innerHTML = goals.map((g,i)=>`
             <div class="goal-box">
-                <div style="display:flex;justify-content:space-between"><b>${g.txt}</b><button onclick="delG(${i})" style="border:none;background:none;color:red">🗑️</button></div>
-                <div style="display:flex;gap:5px;margin-top:10px;">
-                    <select onchange="updG(${i},'help',this.value)"><option value="">مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select>
-                    <select onchange="updG(${i},'prog',this.value)"><option value="">إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select>
-                    <select onchange="updG(${i},'gen',this.value)"><option value="">تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <b style="font-size:15px;color:#333;">🎯 ${g.txt}</b>
+                    <button onclick="delG(${i})" style="border:none;background:none;color:red;font-size:18px;cursor:pointer;">🗑️</button>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <select onchange="updG(${i},'help',this.value)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select>
+                    <select onchange="updG(${i},'prog',this.value)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select>
+                    <select onchange="updG(${i},'gen',this.value)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select>
                 </div>
             </div>`).join('');
     }
 
-    function updG(i,f,v) { 
-        db[curC].data[curM][curD][i][f]=v; 
-        save(); 
-    }
-
-    function delG(i) { 
-        if(confirm('حذف الهدف؟')){ 
-            db[curC].data[curM][curD].splice(i,1); 
-            save(); 
-            renderG(); 
-        } 
-    }
+    function updG(i,f,v) { db[curC].data[curM][curD][i][f]=v; save(); }
+    function delG(i) { if(confirm('حذف الهدف؟')){ db[curC].data[curM][curD].splice(i,1); save(); renderG(); }}
 
     function makeReport() {
         let child = db[curC]; let mData = child.data ? child.data[curM] : null;
-        if(!mData) return alert("لا توجد أهداف لهذا الشهر.");
-        let html = `<div style="text-align:center; padding:10px;"><h3>تقرير أداء: ${child.name}</h3><p>لشهر: ${curM}</p></div><table border="1" style="width:100%; border-collapse:collapse; background:white;"><tr><th>المجال</th><th>الهدف</th><th>الإنجاز</th></tr>`;
-        let hasGoals = false;
-        for(let d in mData) { 
-            mData[d].forEach(g => { 
-                html += `<tr><td>${d}</td><td>${g.txt}</td><td align="center">${g.prog}%</td></tr>`; 
-                hasGoals = true;
-            }); 
-        }
-        if(!hasGoals) return alert("لا توجد أهداف مضافة.");
-        document.getElementById('reportArea').innerHTML = html + `</table><button class="btn-main" style="margin-top:15px;" onclick="window.print()">🖨️ طباعة التقرير</button>`;
+        if(!mData) return alert("لا توجد أهداف مضافة لهذا الشهر.");
+        let html = `<div style="text-align:center; padding:15px; background:#f9f9f9; border-radius:10px;"><h3>📄 تقرير أداء: ${child.name}</h3><p>📅 لشهر: ${curM}</p></div><table><tr><th>المجال</th><th>الهدف</th><th>الإنجاز</th></tr>`;
+        let has = false;
+        for(let d in mData) { mData[d].forEach(g => { html += `<tr><td>${d}</td><td>${g.txt}</td><td>${g.prog}%</td></tr>`; has=true; }); }
+        if(!has) return alert("الشهر فارغ من الأهداف.");
+        document.getElementById('reportArea').innerHTML = html + `</table><button class="btn-main" style="margin-top:20px; background:#333;" onclick="window.print()">🖨️ طباعة أو حفظ التقرير</button>`;
         document.getElementById('reportArea').classList.remove('hidden');
     }
 
-    function goP(id) { 
-        document.querySelectorAll('body > div:not(.status-bar)').forEach(p=>p.classList.add('hidden')); 
-        document.getElementById(id).classList.remove('hidden'); 
+    function goP(id) {
+        document.querySelectorAll('body > div:not(.status-bar)').forEach(p=>p.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
         window.scrollTo(0,0);
     }
 </script>
