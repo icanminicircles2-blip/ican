@@ -3,148 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Live Sync</title>
+    <title>I CAN - SECURE ADMIN</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #4361ee; --secondary: #3f37c9; --success: #2ec4b6; --danger: #ef233c; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; direction: rtl; }
-        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--secondary), var(--primary)); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .admin-section { background: #fff9db; padding: 15px; border-radius: 12px; border: 2px dashed #f59f00; margin-top: 15px; text-align: right; }
-        header { background: var(--secondary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        :root { --p: #4361ee; --s: #3f37c9; --ok: #2ec4b6; --err: #ef233c; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        header { background: var(--s); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .card { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .grid-item { background: white; padding: 20px; text-align: center; border-radius: 15px; border: 1px solid #eee; cursor: pointer; border-bottom: 4px solid #ddd; position: relative; }
-        
-        /* التنوير اللحظي */
-        .has-goals { background: #e3f2fd !important; border-color: var(--primary) !important; border-bottom: 4px solid var(--primary) !important; color: var(--secondary); font-weight: bold; }
-        .has-goals::after { content: '✅'; position: absolute; top: 5px; right: 5px; font-size: 12px; }
-
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .grid-item { background: white; padding: 20px; text-align: center; border-radius: 15px; border: 1px solid #eee; cursor: pointer; border-bottom: 4px solid #ddd; }
+        .has-goals { background: #e3f2fd; border-bottom-color: var(--p); font-weight: bold; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; font-size: 14px; }
+        .btn { background: var(--p); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
+        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--s); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
+        .adm-section { margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #ddd; text-align: right; }
+        .staff-list { margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 10px; }
+        .staff-item { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        @media print { header, .btn, input, select, .card button { display: none; } }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
     <div class="login-card">
-        <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
-        <h2>مركز I CAN</h2>
-        <input type="text" id="userIn" placeholder="اسم المستخدم">
-        <input type="password" id="passIn" placeholder="كلمة المرور">
-        <button class="btn-main" onclick="login()">دخول</button>
-        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:12px; margin-top:15px; cursor:pointer;">⚙️ الإدارة</button>
-        <div id="adminPanel" class="admin-section hidden">
-            <input type="password" id="masterKey" placeholder="كود د. مصطفى">
-            <input type="text" id="newStaffUser" placeholder="اسم الأخصائي">
-            <input type="text" id="newStaffPass" placeholder="الباسورد">
-            <button class="btn-main" style="background:var(--success)" onclick="addStaff()">إضافة</button>
-            <div id="staffListDisplay"></div>
+        <h2 style="color:var(--s)">مركز I CAN</h2>
+        <input type="text" id="uIn" placeholder="اسم المستخدم">
+        <input type="password" id="pIn" placeholder="كلمة المرور">
+        <button class="btn" onclick="login()">دخول</button>
+        <button onclick="document.getElementById('admBox').classList.toggle('hidden')" style="background:none; border:none; color:var(--p); margin-top:20px; cursor:pointer;">⚙️ الإدارة والسلة</button>
+        <div id="admBox" class="adm-section hidden">
+            <input type="password" id="mKey" oninput="checkAdminKey(this.value)" placeholder="كود د. مصطفى">
+            <div id="secureContent" class="hidden">
+                <button class="btn" style="background:var(--err); margin-bottom:10px" onclick="openBin()">🗑️ فتح السلة</button>
+                <hr>
+                <input type="text" id="stName" placeholder="اسم الأخصائي الجديد">
+                <input type="text" id="stPass" placeholder="الباسورد">
+                <button class="btn" style="background:var(--ok)" onclick="addStaff()">+ إضافة أخصائي</button>
+                
+                <div class="staff-list" id="staffListArea">
+                    </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="app" class="hidden">
     <header>
-        <div id="backBtnArea"></div>
+        <div id="backBtn"></div>
         <h3 id="navTitle" style="margin:0">I CAN</h3>
-        <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:8px;">خروج</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:white; font-size:20px;">🚪</button>
     </header>
-    <div class="container">
-        <div id="p1" class="page"><input type="text" id="childName" placeholder="اسم الطفل..."><button class="btn-main" onclick="addChild()">+ إضافة طفل</button><div id="cList" style="margin-top:20px;"></div></div>
-        <div id="p2" class="page hidden"><div class="grid" id="mGrid"></div></div>
-        <div id="p3" class="page hidden"><div class="grid" id="dGrid"></div><button class="btn-main" style="margin-top:20px; background:var(--success)" onclick="showReport()">📄 التقرير الشهري</button><div id="reportArea"></div></div>
-        <div id="p4" class="page hidden"><input type="text" id="goalTxt" placeholder="اكتب الهدف..."><button class="btn-main" onclick="addGoal()">حفظ ✅</button><div id="gList" style="margin-top:20px;"></div></div>
-    </div>
+    <div class="container" id="mainArea"></div>
 </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA", databaseURL: "https://ican-center-default-rtdb.firebaseio.com", projectId: "ican-center" };
+    const firebaseConfig = { apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA", databaseURL: "https://ican-center-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_v14_final');
-    const staffRef = firebase.database().ref('ican_staff_list');
-    
-    let db = [], staffRaw = {}, curC, curM, curD;
-    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
+    const dbRef = firebase.database().ref('IC_DATA_V1');
+    const stRef = firebase.database().ref('IC_STAFF_V1');
+    const bnRef = firebase.database().ref('IC_BIN_V1');
 
-    function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); }
-    function addStaff() { if(document.getElementById('masterKey').value !== 'dr.mostafa.ican') return alert('خطأ'); staffRef.push({user: document.getElementById('newStaffUser').value, pass: document.getElementById('newStaffPass').value}).then(()=>document.getElementById('adminPanel').classList.add('hidden')); }
-    function deleteStaff(keyId) { if(document.getElementById('masterKey').value !== 'dr.mostafa.ican') return alert('خطأ'); if(confirm('حذف؟')) staffRef.child(keyId).remove(); }
-    
-    function login() { 
-        const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value; 
-        if(u === 'hassan' && p === '1234') return start(); 
-        let f = Object.values(staffRaw).find(s => s.user === u && s.pass === p); 
-        if(f) start(); else alert('خطأ في البيانات'); 
-    }
+    let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selD = '';
+    const mons = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
-    function start() { 
-        document.getElementById('loginPage').classList.add('hidden'); 
-        document.getElementById('app').classList.remove('hidden'); 
-        dbRef.on('value', s => { 
-            db = s.val() || []; 
-            // التحديث اللحظي للواجهة الحالية أياً كانت
-            refreshCurrentUI();
-        }); 
-    }
-
-    function refreshCurrentUI() {
-        const p1 = document.getElementById('p1'), p3 = document.getElementById('p3'), p4 = document.getElementById('p4');
-        if (!p1.classList.contains('hidden')) renderC();
-        if (!p3.classList.contains('hidden')) renderD();
-        if (!p4.classList.contains('hidden')) renderG();
-    }
-
-    function addChild() { let n = document.getElementById('childName').value; if(n){ db.push({name:n, data:{}}); dbRef.set(db); document.getElementById('childName').value=''; } }
-    function renderC() { document.getElementById('cList').innerHTML = db.map((c,i)=>`<div class="card" onclick="openP2(${i})"><span>👤 <b>${c.name}</b></span><button onclick="event.stopPropagation(); if(confirm('حذف؟')){db.splice(${i},1); dbRef.set(db);}" style="border:none; color:red; background:none; font-size:20px;">🗑️</button></div>`).join(''); }
-    
-    function openP2(i) { curC=i; document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="grid-item" onclick="openP3('${m}')">📅<br>${m}</div>`).join(''); showPage('p2'); }
-    function openP3(m) { curM=m; renderD(); showPage('p3'); }
-
-    function renderD() {
-        document.getElementById('dGrid').innerHTML = domains.map(d => {
-            let has = (db[curC] && db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
-            return `<div class="grid-item ${has ? 'has-goals' : ''}" onclick="openP4('${d}')">📂<br>${d}</div>`;
-        }).join('');
-    }
-
-    function openP4(d) { curD=d; renderG(); showPage('p4'); }
-    
-    function addGoal() {
-        let txt = document.getElementById('goalTxt').value; if(!txt) return;
-        if(!db[curC].data) db[curC].data = {}; if(!db[curC].data[curM]) db[curC].data[curM] = {}; if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
-        db[curC].data[curM][curD].push({txt:txt, help:'بدون', prog:'0', gen:'لا'});
-        dbRef.set(db); document.getElementById('goalTxt').value='';
-    }
-
-    function removeGoal(idx) { if(confirm('حذف الهدف؟')) { db[curC].data[curM][curD].splice(idx,1); dbRef.set(db); } }
-
-    function renderG() {
-        let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
-        document.getElementById('gList').innerHTML = goals.map((g,i)=>`<div class="card" style="display:block"><div style="display:flex; justify-content:space-between"><b>🎯 ${g.txt}</b> <button onclick="removeGoal(${i})" style="border:none; color:red; background:none;">🗑️</button></div><div style="display:flex; gap:5px; margin-top:10px;"><select onchange="db[curC].data[curM][curD][${i}].help=this.value; dbRef.set(db)"><option value="">🆘 مساعدة</option>${["بدون","FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].prog=this.value; dbRef.set(db)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].gen=this.value; dbRef.set(db)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join('');
-    }
-
-    function showReport() {
-        let mData = db[curC].data[curM]; if(!mData) return alert("لا توجد بيانات");
-        let h = `<h3>تقرير ${db[curC].name} - ${curM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>إنجاز</th><th>تعميم</th></tr>`;
-        for(let d in mData) { mData[d].forEach(g => { h+=`<tr><td>${d}</td><td>${g.txt}</td><td>${g.help || '--'}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`; }); }
-        document.getElementById('reportArea').innerHTML = h + `</table><button class="btn-main" onclick="window.print()">🖨️ طباعة</button>`;
-    }
-
-    function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('backBtnArea').innerHTML = id==='p1'?'':`<button onclick="goBack('${id}')" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">🔙</button>`; refreshCurrentUI(); }
-    function goBack(id) { if(id==='p2') showPage('p1'); else if(id==='p3') showPage('p2'); else if(id==='p4') showPage('p3'); }
-    function logout() { location.reload(); }
-    staffRef.on('value', s => { 
-        staffRaw = s.val() || {}; 
-        let h = ''; for (let k in staffRaw) h += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #ddd;"><span>👤 ${staffRaw[k].user}</span><button onclick="deleteStaff('${k}')" style="color:red; background:none; border:none;">🗑️</button></div>`;
-        document.getElementById('staffListDisplay').innerHTML = h;
+    // تحميل الأخصائيين وتحديث القائمة
+    stRef.on('value', s => {
+        staffs = s.val() || {};
+        updateStaffUI();
     });
+
+    function checkAdminKey(val) {
+        const secureDiv = document.getElementById('secureContent');
+        if(val === 'dr.mostafa.ican') {
+            secureDiv.classList.remove('hidden');
+            updateStaffUI();
+        } else {
+            secureDiv.classList.add('hidden');
+        }
+    }
+
+    function updateStaffUI() {
+        let h = '<b>قائمة الأخصائيين الحالية:</b><br>';
+        for(let id in staffs) {
+            h += `<div class="staff-item">${staffs[id].u} <button onclick="delStaff('${id}')" style="background:none; border:none; color:red; cursor:pointer;">🗑️ مسح</button></div>`;
+        }
+        document.getElementById('staffListArea').innerHTML = h;
+    }
+
+    function login() {
+        let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
+        let isStf = Object.values(staffs).find(x => x.u === u && x.p === p);
+        if((u === 'hassan' && p === '1234') || isStf) { showApp(); } else alert('بيانات الدخول خطأ');
+    }
+
+    function showApp() {
+        document.getElementById('loginPage').style.display='none';
+        document.getElementById('app').classList.remove('hidden');
+        dbRef.on('value', s => { db = s.val() || {}; render(); });
+    }
+
+    function render() {
+        const area = document.getElementById('mainArea');
+        const title = document.getElementById('navTitle');
+        const back = document.getElementById('backBtn');
+        if(view === 'p1') {
+            title.innerText = "الأطفال"; back.innerHTML = '';
+            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة طفل</button><hr>';
+            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:var(--err); border:none; background:none; cursor:pointer;">🗑️</button></div>`;
+            area.innerHTML = h;
+        } 
+        else if(view === 'p2') {
+            title.innerText = selC;
+            back.innerHTML = '<button onclick="view=\'p1\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            area.innerHTML = `<div class="grid">${mons.map(m => `<div class="grid-item" onclick="selM='${m}'; view='p3'; render()">📅<br>${m}</div>`).join('')}</div>`;
+        }
+        else if(view === 'p3') {
+            title.innerText = selM;
+            back.innerHTML = '<button onclick="view=\'p2\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            let h = '<div class="grid">';
+            doms.forEach(d => { let has = db[selC]?.[selM]?.[d]; h += `<div class="grid-item ${has?'has-goals':''}" onclick="selD='${d}'; view='p4'; render()">📂<br>${d}</div>`; });
+            area.innerHTML = h + `</div><button class="btn" style="background:var(--ok); margin-top:20px;" onclick="exportRep()">📄 تصدير للطباعة</button><div id="repDiv"></div>`;
+        }
+        else if(view === 'p4') {
+            title.innerText = selD;
+            back.innerHTML = '<button onclick="view=\'p3\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            let gs = db[selC]?.[selM]?.[selD] || {};
+            let h = '<input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">حفظ</button><hr>';
+            for(let gn in gs) h += `<div class="card" style="display:block">
+                <div style="display:flex; justify-content:space-between"><b>🎯 ${gn}</b><button onclick="toBinG('${gn}')" style="color:var(--err); border:none; background:none;">🗑️</button></div>
+                <div style="display:flex; gap:5px; margin-top:10px">
+                    <select style="flex:1" onchange="upG('${gn}','h',this.value)"><option>🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select>
+                    <select style="flex:1" onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select>
+                    <select style="flex:1" onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>🌍 تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select>
+                </div>
+            </div>`;
+            area.innerHTML = h;
+        }
+        else if(view === 'bin') {
+            title.innerText = "السلة"; back.innerHTML = '<button onclick="view=\'p1\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            bnRef.once('value', s => {
+                let b = s.val() || {}; let h = '';
+                for(let k in b) h += `<div class="card"><b>🗑️ ${k}</b><button class="btn" style="width:auto; padding:5px 10px; background:var(--ok)" onclick="restor('${k}')">استرداد</button></div>`;
+                area.innerHTML = h || 'السلة فارغة';
+            });
+        }
+    }
+
+    function addC() { let n = document.getElementById('cN').value; if(n) dbRef.child(n).update({ exists: true }); }
+    function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
+    function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selD}/${gn}/${f}`).set(v); }
+    function toBinC(n) { if(confirm('حذف؟')) { bnRef.child(n).set({ type:'c', d: db[n] }); dbRef.child(n).remove(); } }
+    function toBinG(gn) { let g = db[selC][selM][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, dm: selD }); dbRef.child(`${selC}/${selM}/${selD}/${gn}`).remove(); }
+    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove().then(()=>render()); }); }
+    
+    function addStaff() {
+        let u = document.getElementById('stName').value, p = document.getElementById('stPass').value;
+        if(u && p) { stRef.push({ u: u, p: p }).then(() => { alert('✅ تمت الإضافة'); document.getElementById('stName').value=''; document.getElementById('stPass').value=''; }); }
+    }
+    function delStaff(id) { if(confirm('حذف هذا الأخصائي؟')) stRef.child(id).remove(); }
+    function openBin() { view='bin'; showApp(); }
+
+    function exportRep() {
+        let h = `<h3>تقرير: ${selC} - ${selM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>النسبة</th><th>التعميم</th></tr>`;
+        let data = db[selC][selM];
+        for(let d in data) for(let g in data[d]) h += `<tr><td>${d}</td><td>${g}</td><td>${data[d][g].h}</td><td>${data[d][g].p}%</td><td>${data[d][g].g || 'لا'}</td></tr>`;
+        document.getElementById('repDiv').innerHTML = h + '</table><button class="btn" onclick="window.print()">🖨️ طباعة</button>';
+    }
 </script>
 </body>
 </html>
