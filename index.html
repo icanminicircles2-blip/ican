@@ -3,24 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - PRO SYSTEM</title>
+    <title>I CAN - FULL SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #4361ee; --danger: #ef233c; --bg: #f8f9fa; --dark: #3f37c9; }
+        :root { --primary: #4361ee; --danger: #ef233c; --success: #2ec4b6; --bg: #f8f9fa; --dark: #3f37c9; }
         body { font-family: sans-serif; background: var(--bg); direction: rtl; margin: 0; }
         
-        /* شاشة تسجيل الدخول */
-        #loginPage { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(135deg, var(--dark), var(--primary)); 
-            display: flex; align-items: center; justify-content: center; z-index: 2000;
-        }
-        .login-card { 
-            background: white; padding: 30px; border-radius: 20px; 
-            width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
+        /* شاشة الدخول */
+        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--dark), var(--primary)); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .login-card { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
+
         .header { background: var(--dark); color: white; padding: 20px; text-align: center; position: relative; }
         .status-bar { background: #222; color: #00ff88; font-size: 11px; text-align: center; padding: 6px; }
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
@@ -29,41 +22,40 @@
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
         
         .btn-item { background: white; padding: 15px 5px; text-align: center; border-radius: 12px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-item svg { width: 24px; height: 24px; display: block; margin: 0 auto 8px; fill: #555; }
-        .btn-item.active { background: #eef2ff; border-bottom-color: var(--primary); color: var(--primary); }
-
-        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 16px; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         
         .goal-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
-        .del-btn { background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; }
         .del-btn svg { fill: var(--danger); width: 22px; height: 22px; }
         .back-btn { position: absolute; right: 15px; top: 25px; cursor: pointer; fill: white; width: 24px; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #eee; flex: 1; font-size: 11px; background: #f9f9f9; }
+        
+        /* تنسيق القوائم المنسدلة */
+        .controls-row { display: flex; gap: 5px; margin-top: 12px; }
+        select { padding: 8px; border-radius: 6px; border: 1px solid #ddd; flex: 1; font-size: 11px; background: #fff; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
     <div class="login-card">
-        <h2 style="margin:0 0 20px 0;">تسجيل دخول I CAN</h2>
-        <input type="text" id="userIn" placeholder="اسم المستخدم">
-        <input type="password" id="passIn" placeholder="كلمة المرور">
+        <h2>مركز I CAN</h2>
+        <input type="text" id="userIn" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" placeholder="اسم المستخدم">
+        <input type="password" id="passIn" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" placeholder="كلمة المرور">
         <button class="btn-main" onclick="checkLogin()">دخول</button>
         <p id="loginError" style="color: red; font-size: 12px;" class="hidden">خطأ في البيانات!</p>
     </div>
 </div>
 
 <div id="mainContent" class="hidden">
-    <div id="status" class="status-bar">جاري المزامنة...</div>
+    <div id="status" class="status-bar">جاري المزامنة السحابية...</div>
+    
     <div id="p1">
         <div class="header">
-            <button onclick="logout()" style="float:left; background:rgba(255,255,255,0.2); border:none; color:white; padding:5px; border-radius:5px;">خروج</button>
+            <button onclick="logout()" style="float:left; background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 10px; border-radius:5px;">خروج</button>
             <h1>I CAN Center</h1>
         </div>
         <div class="container">
-            <input type="text" id="cIn" placeholder="اسم الطفل...">
+            <input type="text" id="cIn" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" placeholder="اسم الطفل...">
             <button class="btn-main" onclick="addC()">إضافة طفل +</button>
             <div id="cList"></div>
         </div>
@@ -76,21 +68,17 @@
 
     <div id="p3" class="hidden">
         <div class="header"><div class="back-btn" onclick="goP('p2')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg></div><h2 id="mTitle"></h2></div>
-        <div class="container"><div class="grid" id="dGrid"></div><button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 التقرير</button><div id="reportArea" class="hidden"></div></div>
+        <div class="container"><div class="grid" id="dGrid"></div><button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 استخراج التقرير</button><div id="reportArea" class="hidden"></div></div>
     </div>
 
     <div id="p4" class="hidden">
         <div class="header"><div class="back-btn" onclick="goP('p3')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg></div><h2 id="dTitle"></h2></div>
-        <div class="container"><input type="text" id="gIn" placeholder="الهدف الجديد..."><button class="btn-main" onclick="addG()">حفظ ✅</button><div id="gList"></div></div>
+        <div class="container"><input type="text" id="gIn" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" placeholder="الهدف الجديد..."><button class="btn-main" onclick="addG()">حفظ الهدف ✅</button><div id="gList"></div></div>
     </div>
 </div>
 
 <script>
-    // أيقونات المسح والمجلدات
-    const icons = {
-        trash: `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
-        folder: `<svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`
-    };
+    const icons = { trash: `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>` };
 
     const firebaseConfig = {
         apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA",
@@ -100,7 +88,7 @@
         appId: "1:680182264820:web:0fe442a3baae4811517fa1"
     };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_v10');
+    const dbRef = firebase.database().ref('ican_final_v11');
 
     let db = [];
     let curC, curM, curD;
@@ -110,48 +98,27 @@
     function checkLogin() {
         const u = document.getElementById('userIn').value;
         const p = document.getElementById('passIn').value;
-        if(u === 'hassan' && p === '1234') { localStorage.setItem('ican_ok', 'true'); showApp(); }
+        if(u === 'hassan' && p === '1234') { localStorage.setItem('ican_auth', 'true'); showApp(); }
         else { document.getElementById('loginError').classList.remove('hidden'); }
     }
 
     function showApp() {
-        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('loginPage').style.display = 'none';
         document.getElementById('mainContent').classList.remove('hidden');
-        dbRef.on('value', (s) => { db = s.val() || []; renderC(); });
+        dbRef.on('value', (s) => { db = s.val() || []; renderC(); if(curC !== undefined) { if(!document.getElementById('p4').classList.contains('hidden')) renderG(); }});
     }
 
-    function logout() { localStorage.removeItem('ican_ok'); location.reload(); }
-    window.onload = () => { if(localStorage.getItem('ican_ok')) showApp(); };
+    function logout() { localStorage.removeItem('ican_auth'); location.reload(); }
+    window.onload = () => { if(localStorage.getItem('ican_auth')) showApp(); };
 
     function save() { dbRef.set(db); }
     function addC() { let n = document.getElementById('cIn').value.trim(); if(n){ db.push({name:n, data:{}}); save(); document.getElementById('cIn').value=''; }}
-    
-    function renderC() {
-        document.getElementById('cList').innerHTML = db.map((c,i)=>`
-            <div class="card" onclick="openM(${i})">
-                <span>👤 ${c.name}</span>
-                <button class="del-btn" onclick="event.stopPropagation();delC(${i})">${icons.trash}</button>
-            </div>
-        `).join('');
-    }
-
+    function renderC() { document.getElementById('cList').innerHTML = db.map((c,i)=>`<div class="card" onclick="openM(${i})"><span>👤 ${c.name}</span><button style="border:none;background:none;" onclick="event.stopPropagation();delC(${i})">${icons.trash}</button></div>`).join(''); }
     function delC(i) { if(confirm('حذف؟')){ db.splice(i,1); save(); } }
 
-    function openM(i) {
-        curC=i; document.getElementById('cTitle').innerText = db[i].name;
-        document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="btn-item" onclick="openD('${m}')">📅<br>${m}</div>`).join('');
-        goP('p2');
-    }
-
+    function openM(i) { curC=i; document.getElementById('cTitle').innerText = db[i].name; document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="btn-item" onclick="openD('${m}')">📅<br>${m}</div>`).join(''); goP('p2'); }
     function openD(m) { curM=m; document.getElementById('mTitle').innerText = "شهر " + m; renderD(); goP('p3'); }
-
-    function renderD() {
-        document.getElementById('dGrid').innerHTML = domains.map(d => {
-            let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
-            return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">${icons.folder}<br>${d}</div>`;
-        }).join('');
-    }
-
+    function renderD() { document.getElementById('dGrid').innerHTML = domains.map(d => { let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0); return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">📂<br>${d}</div>`; }).join(''); }
     function openG(d) { curD=d; document.getElementById('dTitle').innerText = d; renderG(); goP('p4'); }
 
     function addG() {
@@ -164,20 +131,26 @@
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
         document.getElementById('gList').innerHTML = goals.map((g,i)=>`
             <div class="goal-box">
-                <div style="display:flex;justify-content:space-between;"><b>🎯 ${g.txt}</b><button class="del-btn" onclick="delG(${i})">${icons.trash}</button></div>
-                <div style="display:flex;gap:5px;margin-top:10px;">
+                <div style="display:flex;justify-content:space-between;"><b>🎯 ${g.txt}</b><button style="border:none;background:none;" onclick="delG(${i})">${icons.trash}</button></div>
+                <div class="controls-row">
                     <select onchange="updG(${i},'help',this.value)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select>
                     <select onchange="updG(${i},'prog',this.value)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select>
+                    <select onchange="updG(${i},'gen',this.value)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select>
                 </div>
             </div>`).join('');
     }
 
     function updG(i,f,v) { db[curC].data[curM][curD][i][f]=v; save(); }
     function delG(i) { if(confirm('حذف؟')){ db[curC].data[curM][curD].splice(i,1); save(); renderG(); }}
+    function goP(id) { document.querySelectorAll('#mainContent > div:not(.status-bar)').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); window.scrollTo(0,0); }
 
-    function goP(id) {
-        document.querySelectorAll('#mainContent > div:not(.status-bar)').forEach(p=>p.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
+    function makeReport() {
+        let child = db[curC]; let mData = child.data ? child.data[curM] : null;
+        if(!mData) return alert("لا توجد بيانات.");
+        let html = `<h3>تقرير: ${child.name} - شهر ${curM}</h3><table border="1" style="width:100%; border-collapse:collapse; text-align:center;"><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th><th>التعميم</th></tr>`;
+        for(let d in mData) { mData[d].forEach(g => { html += `<tr><td>${d}</td><td>${g.txt}</td><td>${g.help}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`; }); }
+        document.getElementById('reportArea').innerHTML = html + `</table><button class="btn-main" onclick="window.print()" style="margin-top:10px;">طباعة التقرير</button>`;
+        document.getElementById('reportArea').classList.remove('hidden');
     }
 </script>
 </body>
