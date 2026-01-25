@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - SECURE ADMIN</title>
+    <title>I CAN - AUDIT LOG BIN</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -21,8 +21,9 @@
         #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--s); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
         .adm-section { margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #ddd; text-align: right; }
-        .staff-list { margin-top: 15px; border-top: 2px dashed #ccc; padding-top: 10px; }
         .staff-item { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .bin-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
+        .who-txt { font-size: 12px; color: #d00000; font-weight: bold; margin-top: 4px; display: block; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         @media print { header, .btn, input, select, .card button { display: none; } }
@@ -45,9 +46,7 @@
                 <input type="text" id="stName" placeholder="اسم الأخصائي الجديد">
                 <input type="text" id="stPass" placeholder="الباسورد">
                 <button class="btn" style="background:var(--ok)" onclick="addStaff()">+ إضافة أخصائي</button>
-                
-                <div class="staff-list" id="staffListArea">
-                    </div>
+                <div id="staffListArea" style="margin-top:10px"></div>
             </div>
         </div>
     </div>
@@ -69,89 +68,64 @@
     const stRef = firebase.database().ref('IC_STAFF_V1');
     const bnRef = firebase.database().ref('IC_BIN_V1');
 
-    let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selD = '';
+    let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selD = '', currUser = '';
     const mons = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
-    // تحميل الأخصائيين وتحديث القائمة
-    stRef.on('value', s => {
-        staffs = s.val() || {};
-        updateStaffUI();
-    });
-
-    function checkAdminKey(val) {
-        const secureDiv = document.getElementById('secureContent');
-        if(val === 'dr.mostafa.ican') {
-            secureDiv.classList.remove('hidden');
-            updateStaffUI();
-        } else {
-            secureDiv.classList.add('hidden');
-        }
-    }
-
+    stRef.on('value', s => { staffs = s.val() || {}; updateStaffUI(); });
+    function checkAdminKey(v) { if(v === 'dr.mostafa.ican') document.getElementById('secureContent').classList.remove('hidden'); else document.getElementById('secureContent').classList.add('hidden'); }
     function updateStaffUI() {
-        let h = '<b>قائمة الأخصائيين الحالية:</b><br>';
-        for(let id in staffs) {
-            h += `<div class="staff-item">${staffs[id].u} <button onclick="delStaff('${id}')" style="background:none; border:none; color:red; cursor:pointer;">🗑️ مسح</button></div>`;
-        }
+        let h = '<b>الأخصائيين:</b>';
+        for(let id in staffs) h += `<div class="staff-item">${staffs[id].u} <button onclick="delStaff('${id}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️</button></div>`;
         document.getElementById('staffListArea').innerHTML = h;
     }
-
     function login() {
         let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
-        let isStf = Object.values(staffs).find(x => x.u === u && x.p === p);
-        if((u === 'hassan' && p === '1234') || isStf) { showApp(); } else alert('بيانات الدخول خطأ');
+        let isStf = Object.values(staffs).find(x=>x.u===u && x.p===p);
+        if((u==='hassan' && p==='1234') || isStf) { currUser = u; showApp(); } else alert('خطأ');
     }
-
-    function showApp() {
-        document.getElementById('loginPage').style.display='none';
-        document.getElementById('app').classList.remove('hidden');
-        dbRef.on('value', s => { db = s.val() || {}; render(); });
-    }
+    function showApp() { document.getElementById('loginPage').style.display='none'; document.getElementById('app').classList.remove('hidden'); dbRef.on('value', s => { db = s.val() || {}; render(); }); }
 
     function render() {
-        const area = document.getElementById('mainArea');
-        const title = document.getElementById('navTitle');
-        const back = document.getElementById('backBtn');
+        const area = document.getElementById('mainArea'), title = document.getElementById('navTitle'), back = document.getElementById('backBtn');
         if(view === 'p1') {
             title.innerText = "الأطفال"; back.innerHTML = '';
-            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة طفل</button><hr>';
-            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:var(--err); border:none; background:none; cursor:pointer;">🗑️</button></div>`;
+            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة</button><hr>';
+            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:var(--err); border:none; background:none;">🗑️</button></div>`;
             area.innerHTML = h;
         } 
         else if(view === 'p2') {
-            title.innerText = selC;
-            back.innerHTML = '<button onclick="view=\'p1\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
-            area.innerHTML = `<div class="grid">${mons.map(m => `<div class="grid-item" onclick="selM='${m}'; view='p3'; render()">📅<br>${m}</div>`).join('')}</div>`;
+            title.innerText = selC; back.innerHTML = '<button onclick="view=\'p1\';render()" style="color:white; background:none; border:none;">🔙</button>';
+            area.innerHTML = `<div class="grid">${mons.map(m => `<div class="grid-item" onclick="selM='${m}'; view='p3'; render()">${m}</div>`).join('')}</div>`;
         }
         else if(view === 'p3') {
-            title.innerText = selM;
-            back.innerHTML = '<button onclick="view=\'p2\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            title.innerText = selM; back.innerHTML = '<button onclick="view=\'p2\';render()" style="color:white; background:none; border:none;">🔙</button>';
             let h = '<div class="grid">';
-            doms.forEach(d => { let has = db[selC]?.[selM]?.[d]; h += `<div class="grid-item ${has?'has-goals':''}" onclick="selD='${d}'; view='p4'; render()">📂<br>${d}</div>`; });
-            area.innerHTML = h + `</div><button class="btn" style="background:var(--ok); margin-top:20px;" onclick="exportRep()">📄 تصدير للطباعة</button><div id="repDiv"></div>`;
+            doms.forEach(d => { let has = db[selC]?.[selM]?.[d]; h += `<div class="grid-item ${has?'has-goals':''}" onclick="selD='${d}'; view='p4'; render()">${d}</div>`; });
+            area.innerHTML = h + '</div><button class="btn" style="background:var(--ok); margin-top:10px" onclick="exportRep()">📄 تقرير</button><div id="repDiv"></div>';
         }
         else if(view === 'p4') {
-            title.innerText = selD;
-            back.innerHTML = '<button onclick="view=\'p3\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
+            title.innerText = selD; back.innerHTML = '<button onclick="view=\'p3\';render()" style="color:white; background:none; border:none;">🔙</button>';
             let gs = db[selC]?.[selM]?.[selD] || {};
             let h = '<input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">حفظ</button><hr>';
-            for(let gn in gs) h += `<div class="card" style="display:block">
-                <div style="display:flex; justify-content:space-between"><b>🎯 ${gn}</b><button onclick="toBinG('${gn}')" style="color:var(--err); border:none; background:none;">🗑️</button></div>
-                <div style="display:flex; gap:5px; margin-top:10px">
-                    <select style="flex:1" onchange="upG('${gn}','h',this.value)"><option>🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select>
-                    <select style="flex:1" onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select>
-                    <select style="flex:1" onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>🌍 تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select>
-                </div>
-            </div>`;
+            for(let gn in gs) h += `<div class="card" style="display:block"><b>🎯 ${gn}</b><button onclick="toBinG('${gn}')" style="float:left; color:red; border:none; background:none;">🗑️</button><div style="display:flex; gap:5px; margin-top:5px"><select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select><select onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select></div></div>`;
             area.innerHTML = h;
         }
         else if(view === 'bin') {
-            title.innerText = "السلة"; back.innerHTML = '<button onclick="view=\'p1\';render()" style="background:none; border:none; color:white; font-size:20px;">🔙</button>';
-            bnRef.once('value', s => {
-                let b = s.val() || {}; let h = '';
-                for(let k in b) h += `<div class="card"><b>🗑️ ${k}</b><button class="btn" style="width:auto; padding:5px 10px; background:var(--ok)" onclick="restor('${k}')">استرداد</button></div>`;
-                area.innerHTML = h || 'السلة فارغة';
+            title.innerText = "السلة"; back.innerHTML = '<button onclick="view=\'p1\';render()" style="color:white; background:none; border:none;">🔙</button>';
+            bnRef.on('value', s => {
+                let b = s.val() || {}, h = '';
+                if(Object.keys(b).length > 0) h = `<button class="btn" style="background:var(--err); margin-bottom:15px" onclick="clearBin()">🔥 مسح السلة بالكامل</button>`;
+                for(let k in b) {
+                    let typeTag = b[k].type === 'c' ? '<span class="bin-tag" style="background:#4361ee">👤 طفل</span>' : '<span class="bin-tag" style="background:#ef233c">🎯 هدف</span>';
+                    let linkInfo = b[k].type === 'g' ? `<br><small style="color:#666">الطفل الأصلي: ${b[k].c}</small>` : '';
+                    h += `<div class="card" style="display:block">
+                        <div>${typeTag} <b>${k}</b> ${linkInfo}</div>
+                        <span class="who-txt">🔴 بواسطة: ${b[k].by || 'غير معروف'}</span>
+                        <button class="btn" style="width:auto; margin-top:8px; padding:5px 10px; background:var(--ok)" onclick="restor('${k}')">استرداد</button>
+                    </div>`;
+                }
+                area.innerHTML = h || 'السلة فارغة حالياً';
             });
         }
     }
@@ -159,22 +133,18 @@
     function addC() { let n = document.getElementById('cN').value; if(n) dbRef.child(n).update({ exists: true }); }
     function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
     function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selD}/${gn}/${f}`).set(v); }
-    function toBinC(n) { if(confirm('حذف؟')) { bnRef.child(n).set({ type:'c', d: db[n] }); dbRef.child(n).remove(); } }
-    function toBinG(gn) { let g = db[selC][selM][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, dm: selD }); dbRef.child(`${selC}/${selM}/${selD}/${gn}`).remove(); }
-    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove().then(()=>render()); }); }
-    
-    function addStaff() {
-        let u = document.getElementById('stName').value, p = document.getElementById('stPass').value;
-        if(u && p) { stRef.push({ u: u, p: p }).then(() => { alert('✅ تمت الإضافة'); document.getElementById('stName').value=''; document.getElementById('stPass').value=''; }); }
-    }
-    function delStaff(id) { if(confirm('حذف هذا الأخصائي؟')) stRef.child(id).remove(); }
+    function toBinC(n) { if(confirm('حذف الطفل؟')) { bnRef.child(n).set({ type:'c', d: db[n], by: currUser }); dbRef.child(n).remove(); } }
+    function toBinG(gn) { let g = db[selC][selM][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, dm: selD, by: currUser }); dbRef.child(`${selC}/${selM}/${selD}/${gn}`).remove(); }
+    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(!i) return; if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove(); }); }
+    function clearBin() { if(confirm('⚠️ مسح نهائي؟')) { if(confirm('تأكيد؟')) bnRef.remove(); } }
+    function addStaff() { let u = document.getElementById('stName').value, p = document.getElementById('stPass').value; if(u && p) stRef.push({ u: u, p: p }).then(() => { alert('تمت'); document.getElementById('stName').value=''; document.getElementById('stPass').value=''; }); }
+    function delStaff(id) { if(confirm('حذف؟')) stRef.child(id).remove(); }
     function openBin() { view='bin'; showApp(); }
-
     function exportRep() {
         let h = `<h3>تقرير: ${selC} - ${selM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>النسبة</th><th>التعميم</th></tr>`;
         let data = db[selC][selM];
         for(let d in data) for(let g in data[d]) h += `<tr><td>${d}</td><td>${g}</td><td>${data[d][g].h}</td><td>${data[d][g].p}%</td><td>${data[d][g].g || 'لا'}</td></tr>`;
-        document.getElementById('repDiv').innerHTML = h + '</table><button class="btn" onclick="window.print()">🖨️ طباعة</button>';
+        document.getElementById('repDiv').innerHTML = h + '</table><button class="btn" onclick="window.print()">طباعة</button>';
     }
 </script>
 </body>
