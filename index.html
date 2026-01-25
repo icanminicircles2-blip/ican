@@ -3,35 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - FINAL MASTER</title>
+    <title>I CAN - Pro Sync</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #4361ee; --success: #2ec4b6; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); direction: rtl; margin: 0; }
         .header { background: #3f37c9; color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; }
-        .status-bar { background: #333; color: #fff; font-size: 11px; text-align: center; padding: 5px; }
+        .status-bar { background: #333; color: #fff; font-size: 11px; text-align: center; padding: 5px; position: sticky; top: 0; z-index: 100; }
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .btn-item { background: white; padding: 18px 5px; text-align: center; border-radius: 12px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-item.active { background: #eef2ff; border-bottom-color: var(--primary); color: var(--primary); }
         .goal-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none; }
         .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         .back-btn { float: left; color: white; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
         select { padding: 8px; border-radius: 5px; border: 1px solid #eee; flex: 1; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div id="status" class="status-bar">جاري فحص الاتصال...</div>
+<div id="status" class="status-bar">جاري المزامنة...</div>
 
 <div id="p1">
-    <div class="header"><h1>I CAN Center</h1><p>نظام المتابعة السحابي</p></div>
+    <div class="header"><h1>I CAN Center</h1><p>نظام إدارة الأطفال</p></div>
     <div class="container">
         <input type="text" id="cIn" placeholder="اسم الطفل الجديد...">
         <button class="btn-main" onclick="addC()">إضافة طفل +</button>
@@ -56,8 +54,8 @@
 <div id="p4" class="hidden">
     <div class="header"><span class="back-btn" onclick="goP('p3')">رجوع</span><h2 id="dTitle"></h2></div>
     <div class="container">
-        <input type="text" id="gIn" placeholder="اكتب الهدف...">
-        <button class="btn-main" onclick="addG()">حفظ الهدف</button>
+        <input type="text" id="gIn" placeholder="اكتب الهدف الجديد...">
+        <button class="btn-main" id="saveGoalBtn" onclick="addG()">حفظ الهدف الآن ✅</button>
         <div id="gList"></div>
     </div>
 </div>
@@ -74,22 +72,25 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_data_v4');
+    const dbRef = firebase.database().ref('ican_final_sync');
 
     let db = [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
+    // مزامنة حية وشاملة
     dbRef.on('value', (snap) => {
         db = snap.val() || [];
-        document.getElementById('status').innerHTML = "✅ متصل بالسحابة";
-        document.getElementById('status').style.background = "green";
+        document.getElementById('status').innerHTML = "✅ متصل لحظياً";
+        document.getElementById('status').style.background = "#2ec4b6";
+        
+        // التحديث الذكي لواجهة المستخدم
         renderC();
-        if(curC !== undefined && curM) { renderD(); if(curD) renderG(); }
-    }, (err) => {
-        document.getElementById('status').innerHTML = "❌ خطأ في الصلاحيات! (فعل الـ Rules من Firebase)";
-        document.getElementById('status').style.background = "red";
+        if (curC !== undefined) {
+            if (document.getElementById('p3').classList.contains('hidden') === false) renderD();
+            if (document.getElementById('p4').classList.contains('hidden') === false) renderG();
+        }
     });
 
     function save() { dbRef.set(db); }
@@ -105,7 +106,7 @@
         `).join('');
     }
 
-    function delC(i) { if(confirm('حذف؟')){ db.splice(i,1); save(); } }
+    function delC(i) { if(confirm('حذف الطفل؟')){ db.splice(i,1); save(); } }
 
     function openM(i) {
         curC=i; document.getElementById('cTitle').innerText=db[i].name;
@@ -115,31 +116,47 @@
 
     function openD(m) {
         curM=m; document.getElementById('mTitle').innerText="شهر "+m;
-        document.getElementById('dGrid').innerHTML=domains.map(d=>{
-            let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
-            return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">📁<br>${d}</div>`;
-        }).join('');
+        renderD();
         document.getElementById('reportArea').classList.add('hidden');
         goP('p3');
     }
 
+    function renderD() {
+        document.getElementById('dGrid').innerHTML=domains.map(d=>{
+            let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
+            return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">📁<br>${d}</div>`;
+        }).join('');
+    }
+
     function openG(d) {
-        curD=d; document.getElementById('dTitle').innerText=d; renderG(); goP('p4');
+        curD=d; document.getElementById('dTitle').innerText=d; 
+        renderG(); 
+        goP('p4');
     }
 
     function addG() {
         let txt = document.getElementById('gIn').value.trim();
         if(!txt) return;
+
         if(!db[curC].data) db[curC].data = {};
         if(!db[curC].data[curM]) db[curC].data[curM] = {};
         if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
+        
+        // 1. إضافة الهدف محلياً فوراً
         db[curC].data[curM][curD].push({txt:txt, help:'', prog:'0', gen:''});
-        save(); document.getElementById('gIn').value='';
+        
+        // 2. تحديث الواجهة فوراً قبل ما السيرفر يرد
+        renderG();
+        document.getElementById('gIn').value = '';
+
+        // 3. الحفظ في السيرفر
+        save();
     }
 
     function renderG() {
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
-        document.getElementById('gList').innerHTML = goals.map((g,i)=>`
+        let listArea = document.getElementById('gList');
+        listArea.innerHTML = goals.map((g,i)=>`
             <div class="goal-box">
                 <div style="display:flex;justify-content:space-between"><b>${g.txt}</b><button onclick="delG(${i})" style="border:none;background:none;color:red">🗑️</button></div>
                 <div style="display:flex;gap:5px;margin-top:10px;">
@@ -150,19 +167,40 @@
             </div>`).join('');
     }
 
-    function updG(i,f,v) { db[curC].data[curM][curD][i][f]=v; save(); }
-    function delG(i) { if(confirm('حذف؟')){ db[curC].data[curM][curD].splice(i,1); save(); }}
+    function updG(i,f,v) { 
+        db[curC].data[curM][curD][i][f]=v; 
+        save(); 
+    }
+
+    function delG(i) { 
+        if(confirm('حذف الهدف؟')){ 
+            db[curC].data[curM][curD].splice(i,1); 
+            save(); 
+            renderG(); 
+        } 
+    }
 
     function makeReport() {
         let child = db[curC]; let mData = child.data ? child.data[curM] : null;
-        if(!mData) return alert("لا توجد بيانات.");
-        let html = `<h3>تقرير: ${child.name}</h3><table><tr><th>المجال</th><th>الهدف</th><th>إنجاز</th></tr>`;
-        for(let d in mData) { mData[d].forEach(g => { html += `<tr><td>${d}</td><td>${g.txt}</td><td>${g.prog}%</td></tr>`; }); }
-        document.getElementById('reportArea').innerHTML = html + `</table><button onclick="window.print()">طباعة التقرير</button>`;
+        if(!mData) return alert("لا توجد أهداف لهذا الشهر.");
+        let html = `<div style="text-align:center; padding:10px;"><h3>تقرير أداء: ${child.name}</h3><p>لشهر: ${curM}</p></div><table border="1" style="width:100%; border-collapse:collapse; background:white;"><tr><th>المجال</th><th>الهدف</th><th>الإنجاز</th></tr>`;
+        let hasGoals = false;
+        for(let d in mData) { 
+            mData[d].forEach(g => { 
+                html += `<tr><td>${d}</td><td>${g.txt}</td><td align="center">${g.prog}%</td></tr>`; 
+                hasGoals = true;
+            }); 
+        }
+        if(!hasGoals) return alert("لا توجد أهداف مضافة.");
+        document.getElementById('reportArea').innerHTML = html + `</table><button class="btn-main" style="margin-top:15px;" onclick="window.print()">🖨️ طباعة التقرير</button>`;
         document.getElementById('reportArea').classList.remove('hidden');
     }
 
-    function goP(id) { document.querySelectorAll('body > div:not(.status-bar)').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    function goP(id) { 
+        document.querySelectorAll('body > div:not(.status-bar)').forEach(p=>p.classList.add('hidden')); 
+        document.getElementById(id).classList.remove('hidden'); 
+        window.scrollTo(0,0);
+    }
 </script>
 </body>
 </html>
