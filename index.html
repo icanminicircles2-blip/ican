@@ -3,58 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Secure Login</title>
+    <title>I CAN - PRO SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #4361ee; --success: #2ec4b6; --bg: #f8f9fa; --dark: #3f37c9; }
-        body { font-family: sans-serif; background: var(--bg); direction: rtl; margin: 0; }
+        body { font-family: sans-serif; background: var(--bg); direction: rtl; margin: 0; overflow-x: hidden; }
+        
+        /* شاشة تسجيل الدخول */
         #loginPage { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; background: linear-gradient(135deg, var(--dark), var(--primary)); color: white;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, var(--dark), var(--primary)); 
+            display: flex; align-items: center; justify-content: center; z-index: 2000;
         }
         .login-card { 
-            background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 85%; max-width: 350px; color: #333; text-align: center;
+            background: white; padding: 30px; border-radius: 20px; 
+            width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .login-card h2 { margin-bottom: 20px; color: var(--dark); }
-        .header { background: var(--dark); color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; }
-        .status-bar { background: #222; color: #00ff88; font-size: 11px; text-align: center; padding: 6px; position: sticky; top: 0; z-index: 100; }
+        
+        .header { background: var(--dark); color: white; padding: 20px; text-align: center; position: relative; }
+        .status-bar { background: #222; color: #00ff88; font-size: 11px; text-align: center; padding: 6px; }
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-item { background: white; padding: 15px 5px; text-align: center; border-radius: 12px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 12px; }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        
+        .btn-item { background: white; padding: 15px 5px; text-align: center; border-radius: 12px; border-bottom: 4px solid #ddd; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; }
         .btn-item svg { width: 24px; height: 24px; display: block; margin: 0 auto 8px; fill: #555; }
         .btn-item.active { background: #eef2ff; border-bottom-color: var(--primary); color: var(--primary); }
         .btn-item.active svg { fill: var(--primary); }
+
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 16px; box-sizing: border-box; }
+        
         .goal-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
-        .hidden { display: none; }
-        svg { width: 20px; height: 20px; fill: currentColor; }
+        .hidden { display: none !important; }
+        .back-btn { position: absolute; right: 15px; top: 25px; cursor: pointer; fill: white; width: 24px; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #eee; flex: 1; font-size: 11px; background: #f9f9f9; }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
     <div class="login-card">
-        <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
-        <h2>مركز I CAN</h2>
-        <p style="font-size: 13px; color: #666;">يرجى تسجيل الدخول</p>
+        <svg viewBox="0 0 24 24" style="width:60px; fill:var(--primary); margin-bottom:15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <h2 style="margin:0 0 20px 0;">تسجيل دخول I CAN</h2>
         <input type="text" id="userIn" placeholder="اسم المستخدم">
         <input type="password" id="passIn" placeholder="كلمة المرور">
-        <button class="btn-main" onclick="checkLogin()">دخول</button>
-        <p id="loginError" style="color: red; font-size: 12px; display: none;">بيانات الدخول غير صحيحة</p>
+        <button class="btn-main" onclick="checkLogin()">دخول للمركز</button>
+        <p id="loginError" style="color: red; font-size: 12px; margin-top: 10px;" class="hidden">بيانات الدخول غير صحيحة!</p>
     </div>
 </div>
 
 <div id="mainContent" class="hidden">
-    <div id="status" class="status-bar">جاري المزامنة...</div>
+    <div id="status" class="status-bar">جاري التوصيل بالسحابة...</div>
+
     <div id="p1">
         <div class="header">
-            <button onclick="logout()" style="background:none; border:1px solid white; color:white; border-radius:5px; padding:2px 10px; font-size:10px; cursor:pointer; float:left;">خروج</button>
-            <h1>I CAN Center</h1>
-            <p>مرحباً بك يا حسن ✅</p>
+            <button onclick="logout()" style="float:left; background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">خروج</button>
+            <h1 style="margin:0; font-size:22px;">مركز I CAN</h1>
         </div>
         <div class="container">
             <input type="text" id="cIn" placeholder="اسم الطفل الجديد...">
@@ -64,30 +71,47 @@
     </div>
 
     <div id="p2" class="hidden">
-        <div class="header"><span onclick="goP('p1')" style="float:right; cursor:pointer; font-size:20px;">🔙</span><h2 id="cTitle"></h2></div>
+        <div class="header">
+            <div class="back-btn" onclick="goP('p1')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg></div>
+            <h2 id="cTitle" style="margin:0;"></h2>
+        </div>
         <div class="container"><div class="grid" id="mGrid"></div></div>
     </div>
 
     <div id="p3" class="hidden">
-        <div class="header"><span onclick="goP('p2')" style="float:right; cursor:pointer; font-size:20px;">🔙</span><h2 id="mTitle"></h2></div>
+        <div class="header">
+            <div class="back-btn" onclick="goP('p2')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg></div>
+            <h2 id="mTitle" style="margin:0;"></h2>
+        </div>
         <div class="container">
             <div class="grid" id="dGrid"></div>
-            <button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 تقرير الشهر</button>
+            <button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 استخراج تقرير الشهر</button>
             <div id="reportArea" class="hidden"></div>
         </div>
     </div>
 
     <div id="p4" class="hidden">
-        <div class="header"><span onclick="goP('p3')" style="float:right; cursor:pointer; font-size:20px;">🔙</span><h2 id="dTitle"></h2></div>
+        <div class="header">
+            <div class="back-btn" onclick="goP('p3')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg></div>
+            <h2 id="dTitle" style="margin:0;"></h2>
+        </div>
         <div class="container">
-            <input type="text" id="gIn" placeholder="اكتب الهدف...">
-            <button class="btn-main" onclick="addG()">✅ حفظ الهدف</button>
+            <input type="text" id="gIn" placeholder="اكتب الهدف الجديد...">
+            <button class="btn-main" onclick="addG()">حفظ الهدف ✅</button>
             <div id="gList"></div>
         </div>
     </div>
 </div>
 
 <script>
+    // الأيقونات بصيغة SVG لضمان الظهور
+    const icons = {
+        user: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
+        calendar: `<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>`,
+        folder: `<svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`,
+        trash: `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`
+    };
+
     const firebaseConfig = {
         apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA",
         authDomain: "ican-center.firebaseapp.com",
@@ -98,45 +122,48 @@
         appId: "1:680182264820:web:0fe442a3baae4811517fa1"
     };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_global_sync');
+    const dbRef = firebase.database().ref('ican_v9_ultimate');
 
     let db = [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
+    // مصفوفة المستخدمين (تقدر تضيف حسن، أحمد، أي حد هنا)
+    const users = [
+        { u: 'hassan', p: '1234' },
+        { u: 'admin', p: 'admin' }
+    ];
+
     function checkLogin() {
-        const u = document.getElementById('userIn').value;
-        const p = document.getElementById('passIn').value;
-        if(u === 'hassan' && p === '1234') { 
-            localStorage.setItem('ican_auth', 'true');
-            showMain();
+        const userVal = document.getElementById('userIn').value.toLowerCase();
+        const passVal = document.getElementById('passIn').value;
+        const found = users.find(x => x.u === userVal && x.p === passVal);
+
+        if(found) {
+            localStorage.setItem('ican_logged', 'true');
+            showApp();
         } else {
-            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('loginError').classList.remove('hidden');
         }
     }
 
-    function showMain() {
-        document.getElementById('loginPage').classList.add('hidden');
+    function showApp() {
+        document.getElementById('loginPage').style.display = 'none';
         document.getElementById('mainContent').classList.remove('hidden');
-        initSync();
+        initData();
     }
 
-    function logout() {
-        localStorage.removeItem('ican_auth');
-        location.reload();
-    }
+    function logout() { localStorage.removeItem('ican_logged'); location.reload(); }
 
     window.onload = () => {
-        if(localStorage.getItem('ican_auth') === 'true') {
-            showMain();
-        }
+        if(localStorage.getItem('ican_logged') === 'true') showApp();
     };
 
-    function initSync() {
+    function initData() {
         dbRef.on('value', (snap) => {
             db = snap.val() || [];
-            document.getElementById('status').innerText = "☁️ متصل (مرحبا حسن)";
+            document.getElementById('status').innerText = "✅ متصل سحابياً";
             renderC();
             if (curC !== undefined) {
                 if (!document.getElementById('p3').classList.contains('hidden')) renderD();
@@ -146,38 +173,46 @@
     }
 
     function save() { dbRef.set(db); }
+
     function addC() {
         let n = document.getElementById('cIn').value.trim();
         if(n) { db.push({name:n, data:{}}); save(); document.getElementById('cIn').value=''; }
     }
+
     function renderC() {
         document.getElementById('cList').innerHTML = db.map((c,i)=>`
             <div class="card" onclick="openM(${i})">
-                <span>👤 ${c.name}</span>
-                <button onclick="event.stopPropagation();delC(${i})" style="border:none;background:none;color:red;cursor:pointer;">🗑️</button>
+                <span style="display:flex;align-items:center;gap:8px;">${icons.user} ${c.name}</span>
+                <button onclick="event.stopPropagation();delC(${i})" style="border:none;background:none;cursor:pointer;">${icons.trash}</button>
             </div>
         `).join('');
     }
-    function delC(i) { if(confirm('حذف؟')){ db.splice(i,1); save(); } }
+
+    function delC(i) { if(confirm('حذف الطفل؟')){ db.splice(i,1); save(); } }
+
     function openM(i) {
         curC=i; document.getElementById('cTitle').innerText = db[i].name;
-        document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="btn-item" onclick="openD('${m}')">📅<br>${m}</div>`).join('');
+        document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="btn-item" onclick="openD('${m}')">${icons.calendar}${m}</div>`).join('');
         goP('p2');
     }
+
     function openD(m) {
         curM=m; document.getElementById('mTitle').innerText = "شهر " + m;
         renderD(); goP('p3');
     }
+
     function renderD() {
         document.getElementById('dGrid').innerHTML = domains.map(d => {
             let active = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
-            return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">📂<br>${d}</div>`;
+            return `<div class="btn-item ${active?'active':''}" onclick="openG('${d}')">${icons.folder}${d}</div>`;
         }).join('');
     }
+
     function openG(d) {
         curD=d; document.getElementById('dTitle').innerText = d;
         renderG(); goP('p4');
     }
+
     function addG() {
         let txt = document.getElementById('gIn').value.trim();
         if(!txt) return;
@@ -187,11 +222,12 @@
         db[curC].data[curM][curD].push({txt:txt, help:'', prog:'0', gen:''});
         save(); document.getElementById('gIn').value = ''; renderG();
     }
+
     function renderG() {
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
         document.getElementById('gList').innerHTML = goals.map((g,i)=>`
             <div class="goal-box">
-                <div style="display:flex;justify-content:space-between;"><b>${g.txt}</b><button onclick="delG(${i})" style="border:none;background:none;color:red;cursor:pointer;">🗑️</button></div>
+                <div style="display:flex;justify-content:space-between;"><b>🎯 ${g.txt}</b><button onclick="delG(${i})" style="border:none;background:none;cursor:pointer;">${icons.trash}</button></div>
                 <div style="display:flex;gap:5px;margin-top:10px;">
                     <select onchange="updG(${i},'help',this.value)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select>
                     <select onchange="updG(${i},'prog',this.value)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select>
@@ -199,8 +235,10 @@
                 </div>
             </div>`).join('');
     }
+
     function updG(i,f,v) { db[curC].data[curM][curD][i][f]=v; save(); }
     function delG(i) { if(confirm('حذف؟')){ db[curC].data[curM][curD].splice(i,1); save(); renderG(); }}
+
     function makeReport() {
         let child = db[curC]; let mData = child.data ? child.data[curM] : null;
         if(!mData) return alert("لا توجد بيانات.");
@@ -209,6 +247,7 @@
         document.getElementById('reportArea').innerHTML = html + `</table><button onclick="window.print()" style="margin-top:10px; width:100%; padding:10px;">طباعة</button>`;
         document.getElementById('reportArea').classList.remove('hidden');
     }
+
     function goP(id) {
         document.querySelectorAll('#mainContent > div:not(.status-bar)').forEach(p=>p.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
