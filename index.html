@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - SVG VERSION</title>
+    <title>I CAN - CLOUD SYNC</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -33,54 +33,35 @@
 <div id="status" class="status-bar">جاري المزامنة...</div>
 
 <div id="p1">
-    <div class="header"><h1>I CAN Center</h1><p>نظام إدارة الأطفال</p></div>
+    <div class="header"><h1>I CAN Center</h1><p>المزامنة السحابية النشطة ✅</p></div>
     <div class="container">
         <input type="text" id="cIn" placeholder="اسم الطفل الجديد...">
         <button class="btn-main" onclick="addC()">
-            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> إضافة طفل جديد
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> إضافة طفل
         </button>
         <div id="cList"></div>
     </div>
 </div>
 
 <div id="p2" class="hidden">
-    <div class="header">
-        <span class="back-btn" onclick="goP('p1')">
-            <svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع
-        </span>
-        <h2 id="cTitle"></h2>
-    </div>
+    <div class="header"><span class="back-btn" onclick="goP('p1')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع</span><h2 id="cTitle"></h2></div>
     <div class="container"><div class="grid" id="mGrid"></div></div>
 </div>
 
 <div id="p3" class="hidden">
-    <div class="header">
-        <span class="back-btn" onclick="goP('p2')">
-            <svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع
-        </span>
-        <h2 id="mTitle"></h2>
-    </div>
+    <div class="header"><span class="back-btn" onclick="goP('p2')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع</span><h2 id="mTitle"></h2></div>
     <div class="container">
         <div class="grid" id="dGrid"></div>
-        <button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> تقرير الشهر
-        </button>
+        <button class="btn-main" style="background:var(--success); margin-top:20px;" onclick="makeReport()">📄 تقرير الشهر</button>
         <div id="reportArea" class="hidden"></div>
     </div>
 </div>
 
 <div id="p4" class="hidden">
-    <div class="header">
-        <span class="back-btn" onclick="goP('p3')">
-            <svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع
-        </span>
-        <h2 id="dTitle"></h2>
-    </div>
+    <div class="header"><span class="back-btn" onclick="goP('p3')"><svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg> رجوع</span><h2 id="dTitle"></h2></div>
     <div class="container">
         <input type="text" id="gIn" placeholder="اكتب الهدف...">
-        <button class="btn-main" onclick="addG()">
-            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> حفظ الهدف
-        </button>
+        <button class="btn-main" onclick="addG()">✅ حفظ ومزامنة</button>
         <div id="gList"></div>
     </div>
 </div>
@@ -97,22 +78,23 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_v8_svg');
+    // مسار واحد موحد لجميع الأجهزة
+    const dbRef = firebase.database().ref('ican_global_sync');
 
     let db = [];
     let curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
-    // أيقونات SVG كأكواد ثابتة
     const iconUser = `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
     const iconCalendar = `<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>`;
     const iconFolder = `<svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
     const iconTrash = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 
+    // هذه الدالة تجعل المزامنة حية 100%
     dbRef.on('value', (snap) => {
         db = snap.val() || [];
-        document.getElementById('status').innerText = "✅ متصل (أيقونات SVG)";
+        document.getElementById('status').innerText = "☁️ متصل بالسحابة (جميع الأجهزة متزامنة)";
         renderC();
         if (curC !== undefined) {
             if (!document.getElementById('p3').classList.contains('hidden')) renderD();
@@ -146,8 +128,7 @@
 
     function openD(m) {
         curM=m; document.getElementById('mTitle').innerText = "شهر " + m;
-        renderD();
-        goP('p3');
+        renderD(); goP('p3');
     }
 
     function renderD() {
@@ -159,8 +140,7 @@
 
     function openG(d) {
         curD=d; document.getElementById('dTitle').innerText = d;
-        renderG();
-        goP('p4');
+        renderG(); goP('p4');
     }
 
     function addG() {
@@ -177,10 +157,7 @@
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
         document.getElementById('gList').innerHTML = goals.map((g,i)=>`
             <div class="goal-box">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <b>${g.txt}</b>
-                    <button class="del-btn" onclick="delG(${i})">${iconTrash}</button>
-                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;"><b>${g.txt}</b><button class="del-btn" onclick="delG(${i})">${iconTrash}</button></div>
                 <div style="display:flex;gap:5px;margin-top:10px;">
                     <select onchange="updG(${i},'help',this.value)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select>
                     <select onchange="updG(${i},'prog',this.value)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select>
@@ -204,7 +181,6 @@
     function goP(id) {
         document.querySelectorAll('body > div:not(.status-bar)').forEach(p=>p.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
-        window.scrollTo(0,0);
     }
 </script>
 </body>
