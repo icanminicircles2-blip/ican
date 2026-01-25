@@ -3,339 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - PROFESSIONAL SYSTEM</title>
+    <title>I CAN - Secure System</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #2ec4b6;
-            --danger: #ef233c;
-            --warning: #ff9f1c;
-            --light-bg: #f8f9fa;
-            --text-main: #2b2d42;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-main);
-            margin: 0;
-            direction: rtl;
-            user-select: none;
-        }
-
-        /* شاشة تسجيل الدخول */
-        #loginPage {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            display: flex; align-items: center; justify-content: center; z-index: 9999;
-        }
-        .login-card {
-            background: white; padding: 40px 30px; border-radius: 25px;
-            width: 85%; max-width: 380px; text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-        .login-card h2 { color: var(--secondary); margin-bottom: 25px; font-size: 24px; }
-
-        /* الهيدر والتنقل */
-        header {
-            background: var(--secondary); color: white; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .back-btn { background: rgba(255,255,255,0.2); border: none; padding: 8px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; }
-        .back-btn svg { fill: white; width: 24px; height: 24px; }
-
-        /* الحالة (المزامنة) */
-        .sync-status { background: #222; color: #00ff88; font-size: 11px; text-align: center; padding: 4px; }
-
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
-
-        /* الكروت والقوائم */
-        .card {
-            background: white; padding: 18px; border-radius: 15px; margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.03); border: 1px solid #edf2f7;
-            transition: 0.3s;
-        }
-        .card:active { transform: scale(0.98); }
-
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
-        .grid-item {
-            background: white; padding: 20px 10px; text-align: center; border-radius: 18px;
-            border: 1px solid #edf2f7; cursor: pointer; border-bottom: 4px solid #cbd5e0;
-        }
-        .grid-item.active { border-bottom-color: var(--success); background: #f0fff4; }
-        .grid-item svg { width: 32px; height: 32px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
-
-        /* مدخلات الأهداف */
-        .goal-item {
-            background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px;
-            border-right: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .goal-controls { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        select { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd; background: #f9f9f9; font-size: 13px; }
-
-        /* الأزرار العامة */
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0;
-            margin-bottom: 15px; box-sizing: border-box; font-size: 16px;
-        }
-        .btn-action {
-            background: var(--primary); color: white; border: none; padding: 15px;
-            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px;
-        }
-        .del-btn { background: none; border: none; cursor: pointer; padding: 5px; }
-        .del-btn svg { fill: var(--danger); width: 22px; height: 22px; }
-
+        :root { --primary: #4361ee; --secondary: #3f37c9; --success: #2ec4b6; --danger: #ef233c; --bg: #f8f9fa; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--secondary), var(--primary)); display: flex; align-items: center; justify-content: center; z-index: 9999; overflow-y: auto; }
+        .login-card { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin: 20px; }
+        .admin-section { background: #fff9db; padding: 15px; border-radius: 12px; border: 2px dashed #f59f00; margin-top: 20px; text-align: right; }
+        header { background: var(--secondary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .grid-item { background: white; padding: 20px; text-align: center; border-radius: 15px; border: 1px solid #eee; cursor: pointer; border-bottom: 4px solid #ddd; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; display: block; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .hidden { display: none !important; }
-
-        /* التقرير للطباعة */
-        @media print {
-            body * { visibility: hidden; }
-            #reportArea, #reportArea * { visibility: visible; }
-            #reportArea { position: absolute; left: 0; top: 0; width: 100%; }
-            .btn-action { display: none; }
-        }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
     <div class="login-card">
-        <div style="font-size: 60px; margin-bottom: 15px;">🦁</div>
-        <h2>I CAN Center</h2>
-        <input type="text" id="userInput" placeholder="اسم المستخدم">
-        <input type="password" id="passInput" placeholder="كلمة المرور">
-        <button class="btn-action" onclick="handleLogin()">تسجيل الدخول</button>
-        <p id="loginMsg" style="color: var(--danger); margin-top: 15px; font-size: 14px;" class="hidden">بيانات الدخول غير صحيحة!</p>
+        <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
+        <h2 style="margin-bottom: 20px;">مركز I CAN</h2>
+        <div id="loginFields">
+            <input type="text" id="userIn" placeholder="اسم المستخدم">
+            <input type="password" id="passIn" placeholder="كلمة المرور">
+            <button class="btn-main" onclick="login()">دخول النظام</button>
+            <p id="errorMsg" style="color:red; font-size:12px;" class="hidden">بيانات الدخول خطأ!</p>
+        </div>
+        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; margin-top:20px; text-decoration: underline;">⚙️ إعدادات الأخصائيين الجدد</button>
+        
+        <div id="adminPanel" class="admin-section hidden">
+            <h4 style="margin:0 0 10px 0; color:#e67e22;">إضافة أخصائي جديد</h4>
+            <input type="password" id="masterKey" placeholder="أدخل الكود السري للمدير">
+            <input type="text" id="newStaffUser" placeholder="اسم المستخدم للأخصائي">
+            <input type="text" id="newStaffPass" placeholder="باسورد الأخصائي">
+            <button class="btn-main" style="background:var(--success)" onclick="addStaff()">تفعيل الحساب سحابياً</button>
+        </div>
     </div>
 </div>
 
 <div id="app" class="hidden">
-    <div class="sync-status" id="syncTag">جاري المزامنة...</div>
-    
     <header>
-        <div id="backContainer"></div>
-        <h3 id="navTitle" style="margin:0">الرئيسية</h3>
-        <button onclick="logout()" style="background:none; border:1px solid white; color:white; border-radius:8px; padding:4px 8px;">خروج</button>
+        <div id="backBtnArea"></div>
+        <h3 id="navTitle" style="margin:0">I CAN</h3>
+        <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:8px;">خروج</button>
     </header>
-
     <div class="container">
         <div id="p1" class="page">
-            <input type="text" id="newChildName" placeholder="إضافة اسم طفل جديد...">
-            <button class="btn-action" onclick="addChild()">إضافة طفل +</button>
-            <div id="childList" style="margin-top:20px;"></div>
+            <input type="text" id="childName" placeholder="اكتب اسم الطفل...">
+            <button class="btn-main" onclick="addChild()">+ إضافة طفل جديد</button>
+            <div id="cList" style="margin-top:20px;"></div>
         </div>
-
-        <div id="p2" class="page hidden">
-            <div class="grid" id="monthsGrid"></div>
-        </div>
-
-        <div id="p3" class="page hidden">
-            <div class="grid" id="domainsGrid"></div>
-            <button class="btn-action" style="margin-top:30px; background:var(--success);" onclick="generateReport()">📄 استخراج تقرير الشهر</button>
-            <div id="reportArea" class="hidden"></div>
-        </div>
-
-        <div id="p4" class="page hidden">
-            <input type="text" id="newGoalText" placeholder="اكتب الهدف هنا...">
-            <button class="btn-action" onclick="addGoal()">حفظ الهدف ✅</button>
-            <div id="goalsList" style="margin-top:20px;"></div>
-        </div>
+        <div id="p2" class="page hidden"><div class="grid" id="mGrid"></div></div>
+        <div id="p3" class="page hidden"><div class="grid" id="dGrid"></div><button class="btn-main" style="margin-top:20px; background:var(--success)" onclick="showReport()">📄 التقرير الشهري</button><div id="reportArea"></div></div>
+        <div id="p4" class="page hidden"><input type="text" id="goalTxt" placeholder="اكتب الهدف..."><button class="btn-main" onclick="addGoal()">حفظ الهدف ✅</button><div id="gList" style="margin-top:20px;"></div></div>
     </div>
 </div>
 
 <script>
-    // الأيقونات بصيغة SVG (مدمجة لضمان الظهور)
-    const svgIcons = {
-        trash: `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
-        back: `<svg viewBox="0 0 24 24"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>`,
-        folder: `<svg viewBox="0 0 24 24" fill="#4361ee"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`,
-        calendar: `<svg viewBox="0 0 24 24" fill="#3f37c9"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>`
-    };
-
-    // إعدادات Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA",
-        databaseURL: "https://ican-center-default-rtdb.firebaseio.com",
-        projectId: "ican-center",
-        appId: "1:680182264820:web:0fe442a3baae4811517fa1"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA", databaseURL: "https://ican-center-default-rtdb.firebaseio.com", projectId: "ican-center" };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('ican_pro_v12');
-
-    let db = [];
-    let curC, curM, curD;
+    const dbRef = firebase.database().ref('ican_v14_final');
+    const staffRef = firebase.database().ref('ican_staff_list');
+    let db = [], staff = [], curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
-    // تسجيل الدخول
-    function handleLogin() {
-        const u = document.getElementById('userInput').value.trim().toLowerCase();
-        const p = document.getElementById('passInput').value;
-        if ((u === 'hassan' || u === 'admin') && p === '1234') {
-            localStorage.setItem('ican_logged', 'true');
-            localStorage.setItem('ican_user', u);
-            startApp();
-        } else {
-            document.getElementById('loginMsg').classList.remove('hidden');
-        }
-    }
+    function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); }
 
-    function startApp() {
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        dbRef.on('value', (snap) => {
-            db = snap.val() || [];
-            document.getElementById('syncTag').innerText = "✅ متصل (مرحباً " + localStorage.getItem('ican_user') + ")";
-            renderChildren();
-            if(curC !== undefined) {
-                if(!document.getElementById('p3').classList.contains('hidden')) renderDomains();
-                if(!document.getElementById('p4').classList.contains('hidden')) renderGoals();
-            }
+    function addStaff() {
+        const key = document.getElementById('masterKey').value;
+        const u = document.getElementById('newStaffUser').value.trim().toLowerCase();
+        const p = document.getElementById('newStaffPass').value;
+        
+        // الكود السري الجديد الذي طلبته
+        if(key !== 'مركز لذوي الاحتياجات الخاصة1234') return alert('الكود السري للمدير خطأ!');
+        
+        if(!u || !p) return alert('برجاء ملء بيانات الأخصائي');
+        staffRef.push({user: u, pass: p}).then(() => {
+            alert("✅ تم إضافة " + u + " بنجاح!");
+            document.getElementById('masterKey').value = '';
+            document.getElementById('newStaffUser').value = '';
+            document.getElementById('newStaffPass').value = '';
+            document.getElementById('adminPanel').classList.add('hidden');
         });
     }
 
-    function logout() { localStorage.clear(); location.reload(); }
-    window.onload = () => { if(localStorage.getItem('ican_logged')) startApp(); };
-
-    // الوظائف الأساسية
-    const save = () => dbRef.set(db);
-
-    function addChild() {
-        let name = document.getElementById('newChildName').value.trim();
-        if(name) { db.push({name: name, data: {}}); save(); document.getElementById('newChildName').value = ''; }
+    function login() {
+        const u = document.getElementById('userIn').value.trim().toLowerCase();
+        const p = document.getElementById('passIn').value;
+        if(u === 'hassan' && p === '1234') { start(); return; }
+        let found = staff.find(s => s.user === u && s.pass === p);
+        if(found) { start(); } else { document.getElementById('errorMsg').classList.remove('hidden'); }
     }
 
-    function renderChildren() {
-        document.getElementById('childList').innerHTML = db.map((c, i) => `
-            <div class="card" onclick="openMonths(${i})">
-                <span style="font-weight:bold; font-size:18px;">👤 ${c.name}</span>
-                <button class="del-btn" onclick="event.stopPropagation(); deleteChild(${i})">${svgIcons.trash}</button>
-            </div>
-        `).join('');
-    }
-
-    function deleteChild(i) { if(confirm('هل أنت متأكد من حذف الطفل وبياناته نهائياً؟')) { db.splice(i, 1); save(); } }
-
-    function openMonths(i) {
-        curC = i;
-        document.getElementById('navTitle').innerText = db[i].name;
-        document.getElementById('monthsGrid').innerHTML = months.map(m => `<div class="grid-item" onclick="openDomains('${m}')">${svgIcons.calendar} ${m}</div>`).join('');
-        showPage('p2');
-    }
-
-    function openDomains(m) {
-        curM = m;
-        document.getElementById('navTitle').innerText = m + " - " + db[curC].name;
-        renderDomains();
-        showPage('p3');
-    }
-
-    function renderDomains() {
-        document.getElementById('domainsGrid').innerHTML = domains.map(d => {
-            let hasData = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
-            return `<div class="grid-item ${hasData?'active':''}" onclick="openGoals('${d}')">${svgIcons.folder} ${d}</div>`;
-        }).join('');
-    }
-
-    function openGoals(d) {
-        curD = d;
-        document.getElementById('navTitle').innerText = d;
-        renderGoals();
-        showPage('p4');
-    }
-
+    function start() { document.getElementById('loginPage').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); dbRef.on('value', s => { db = s.val() || []; renderC(); }); }
+    function addChild() { let n = document.getElementById('childName').value; if(n){ db.push({name:n, data:{}}); dbRef.set(db); document.getElementById('childName').value=''; } }
+    function renderC() { document.getElementById('cList').innerHTML = db.map((c,i)=>`<div class="card" onclick="openP2(${i})"><span>👤 <b>${c.name}</b></span><button onclick="event.stopPropagation(); if(confirm('حذف؟')){db.splice(${i},1); dbRef.set(db);}" style="border:none; color:red; background:none; cursor:pointer; font-size:20px;">🗑️</button></div>`).join(''); }
+    function openP2(i) { curC=i; document.getElementById('navTitle').innerText = db[i].name; document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="grid-item" onclick="openP3('${m}')">📅<br>${m}</div>`).join(''); showPage('p2'); }
+    function openP3(m) { curM=m; document.getElementById('navTitle').innerText = curM; renderD(); showPage('p3'); }
+    function renderD() { document.getElementById('dGrid').innerHTML = domains.map(d=>`<div class="grid-item" onclick="openP4('${d}')">📂<br>${d}</div>`).join(''); }
+    function openP4(d) { curD=d; document.getElementById('navTitle').innerText = curD; renderG(); showPage('p4'); }
     function addGoal() {
-        let txt = document.getElementById('newGoalText').value.trim();
-        if(!txt) return;
-        if(!db[curC].data) db[curC].data = {};
-        if(!db[curC].data[curM]) db[curC].data[curM] = {};
-        if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
-        db[curC].data[curM][curD].push({txt: txt, help: '', prog: '0', gen: 'لا'});
-        save(); document.getElementById('newGoalText').value = ''; renderGoals();
+        let t = document.getElementById('goalTxt').value; if(!t) return;
+        if(!db[curC].data) db[curC].data = {}; if(!db[curC].data[curM]) db[curC].data[curM] = {}; if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
+        db[curC].data[curM][curD].push({txt:t, help:'', prog:'0', gen:'لا'});
+        dbRef.set(db); document.getElementById('goalTxt').value=''; renderG();
     }
-
-    function renderGoals() {
+    function renderG() {
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
-        document.getElementById('goalsList').innerHTML = goals.map((g, i) => `
-            <div class="goal-item">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="font-size:16px;">🎯 ${g.txt}</strong>
-                    <button class="del-btn" onclick="deleteGoal(${i})">${svgIcons.trash}</button>
-                </div>
-                <div class="goal-controls">
-                    <select onchange="updateGoal(${i},'help',this.value)">
-                        <option value="">🆘 المساعدة</option>
-                        ${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}
-                    </select>
-                    <select onchange="updateGoal(${i},'prog',this.value)">
-                        <option value="">📈 الإنجاز</option>
-                        ${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}
-                    </select>
-                    <select onchange="updateGoal(${i},'gen',this.value)">
-                        <option value="">🌍 التعميم</option>
-                        <option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option>
-                        <option value="لا" ${g.gen=='لا'?'selected':''}>لا</option>
-                    </select>
-                </div>
-            </div>
-        `).join('');
+        document.getElementById('gList').innerHTML = goals.map((g,i)=>`<div class="card" style="display:block"><div style="display:flex; justify-content:space-between"><b>🎯 ${g.txt}</b> <button onclick="db[curC].data[curM][curD].splice(${i},1); dbRef.set(db);" style="border:none; color:red; background:none;">🗑️</button></div><div style="display:flex; gap:5px; margin-top:10px;"><select onchange="db[curC].data[curM][curD][${i}].help=this.value; dbRef.set(db)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].prog=this.value; dbRef.set(db)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].gen=this.value; dbRef.set(db)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join('');
     }
-
-    function updateGoal(i, field, val) { db[curC].data[curM][curD][i][field] = val; save(); }
-    function deleteGoal(i) { if(confirm('حذف الهدف؟')) { db[curC].data[curM][curD].splice(i, 1); save(); renderGoals(); } }
-
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        const backBtn = id === 'p1' ? '' : `<button class="back-btn" onclick="goBack('${id}')">${svgIcons.back}</button>`;
-        document.getElementById('backContainer').innerHTML = backBtn;
+    function showReport() {
+        let mData = db[curC].data[curM]; if(!mData) return alert("لا توجد بيانات");
+        let h = `<h3>تقرير ${db[curC].name} - ${curM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>إنجاز</th><th>تعميم</th></tr>`;
+        for(let d in mData) { mData[d].forEach(g => h+=`<tr><td>${d}</td><td>${g.txt}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`); }
+        document.getElementById('reportArea').innerHTML = h + `</table><button class="btn-main" onclick="window.print()">🖨️ طباعة</button>`;
     }
-
-    function goBack(currentId) {
-        if(currentId === 'p2') showPage('p1');
-        else if(currentId === 'p3') openMonths(curC);
-        else if(currentId === 'p4') openDomains(curM);
-    }
-
-    function generateReport() {
-        let child = db[curC];
-        let mData = child.data ? child.data[curM] : null;
-        if(!mData) return alert("لا توجد بيانات لهذا الشهر.");
-        
-        let html = `
-            <div style="padding:20px; border:2px solid #333; margin-top:20px;">
-                <h2 style="text-align:center;">تقرير أداء طفل - مركز I CAN</h2>
-                <p><strong>اسم الطفل:</strong> ${child.name} <span style="float:left;"><strong>الشهر:</strong> ${curM}</span></p>
-                <table>
-                    <thead>
-                        <tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th><th>التعميم</th></tr>
-                    </thead>
-                    <tbody>`;
-        
-        for(let d in mData) {
-            mData[d].forEach(g => {
-                html += `<tr><td>${d}</td><td>${g.txt}</td><td>${g.help}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`;
-            });
-        }
-        
-        html += `</tbody></table>
-            <div style="margin-top:30px;">
-                <p>توقيع الأخصائي: ...........................</p>
-                <button class="btn-action" onclick="window.print()">🖨️ طباعة التقرير</button>
-            </div></div>`;
-        
-        document.getElementById('reportArea').innerHTML = html;
-        document.getElementById('reportArea').classList.remove('hidden');
-        window.scrollTo(0, document.body.scrollHeight);
-    }
+    function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('backBtnArea').innerHTML = id==='p1'?'':`<button onclick="goBack('${id}')" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">🔙</button>`; }
+    function goBack(id) { if(id==='p2') showPage('p1'); else if(id==='p3') showPage('p2'); else if(id==='p4') showPage('p3'); }
+    function logout() { localStorage.clear(); location.reload(); }
+    staffRef.on('value', s => { const val = s.val(); staff = val ? Object.values(val) : []; });
 </script>
 </body>
 </html>
