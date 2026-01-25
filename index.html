@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - Secure System</title>
+    <title>I CAN - System Dr.Mostafa</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -22,6 +22,7 @@
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
+        .staff-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
@@ -29,21 +30,28 @@
 <div id="loginPage">
     <div class="login-card">
         <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
-        <h2 style="margin-bottom: 20px;">مركز I CAN</h2>
+        <h2>مركز I CAN</h2>
         <div id="loginFields">
             <input type="text" id="userIn" placeholder="اسم المستخدم">
             <input type="password" id="passIn" placeholder="كلمة المرور">
             <button class="btn-main" onclick="login()">دخول النظام</button>
             <p id="errorMsg" style="color:red; font-size:12px;" class="hidden">بيانات الدخول خطأ!</p>
         </div>
-        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; margin-top:20px; text-decoration: underline;">⚙️ إعدادات الأخصائيين الجدد</button>
+        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; margin-top:20px; text-decoration: underline;">⚙️ إدارة حسابات الأخصائيين</button>
         
         <div id="adminPanel" class="admin-section hidden">
-            <h4 style="margin:0 0 10px 0; color:#e67e22;">إضافة أخصائي جديد</h4>
-            <input type="password" id="masterKey" placeholder="أدخل الكود السري للمدير">
-            <input type="text" id="newStaffUser" placeholder="اسم المستخدم للأخصائي">
-            <input type="text" id="newStaffPass" placeholder="باسورد الأخصائي">
-            <button class="btn-main" style="background:var(--success)" onclick="addStaff()">تفعيل الحساب سحابياً</button>
+            <h4 style="margin:0 0 10px 0; color:#e67e22;">التحكم في الأخصائيين</h4>
+            <input type="password" id="masterKey" placeholder="أدخل الكود السري (الخاص بدكتور مصطفى)">
+            
+            <div id="addStaffForm">
+                <input type="text" id="newStaffUser" placeholder="اسم المستخدم للأخصائي">
+                <input type="text" id="newStaffPass" placeholder="باسورد الأخصائي">
+                <button class="btn-main" style="background:var(--success)" onclick="addStaff()">تفعيل الحساب ✅</button>
+            </div>
+
+            <hr style="margin: 15px 0; border: 0.5px solid #f59f00;">
+            <p style="font-size: 12px; font-weight: bold;">قائمة الأخصائيين:</p>
+            <div id="staffListDisplay"></div>
         </div>
     </div>
 </div>
@@ -71,21 +79,22 @@
     firebase.initializeApp(firebaseConfig);
     const dbRef = firebase.database().ref('ican_v14_final');
     const staffRef = firebase.database().ref('ican_staff_list');
-    let db = [], staff = [], curC, curM, curD;
+    
+    let db = [], staffRaw = {}, curC, curM, curD;
     const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
     function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); }
 
+    // إضافة أخصائي باستخدام الكود الجديد
     function addStaff() {
         const key = document.getElementById('masterKey').value;
         const u = document.getElementById('newStaffUser').value.trim().toLowerCase();
         const p = document.getElementById('newStaffPass').value;
         
-        // الكود السري الجديد الذي طلبته
-        if(key !== 'مركز لذوي الاحتياجات الخاصة1234') return alert('الكود السري للمدير خطأ!');
+        if(key !== 'dr.mostafa.ican') return alert('الكود السري للدكتور مصطفى خطأ!');
+        if(!u || !p) return alert('برجاء ملء جميع البيانات');
         
-        if(!u || !p) return alert('برجاء ملء بيانات الأخصائي');
         staffRef.push({user: u, pass: p}).then(() => {
             alert("✅ تم إضافة " + u + " بنجاح!");
             document.getElementById('masterKey').value = '';
@@ -95,11 +104,32 @@
         });
     }
 
+    // حذف أخصائي باستخدام الكود الجديد
+    function deleteStaff(keyId) {
+        const key = document.getElementById('masterKey').value;
+        if(key !== 'dr.mostafa.ican') return alert('يجب كتابة الكود السري dr.mostafa.ican أولاً لتتمكن من الحذف!');
+        if(confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
+            staffRef.child(keyId).remove().then(() => alert('تم حذف الحساب'));
+        }
+    }
+
+    function renderStaffList() {
+        const listDiv = document.getElementById('staffListDisplay');
+        let html = '';
+        for (let key in staffRaw) {
+            html += `<div class="staff-item">
+                        <span>👤 ${staffRaw[key].user}</span>
+                        <button onclick="deleteStaff('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑️ حذف</button>
+                    </div>`;
+        }
+        listDiv.innerHTML = html || '<p style="font-size:11px; color:gray;">لا يوجد أخصائيين</p>';
+    }
+
     function login() {
         const u = document.getElementById('userIn').value.trim().toLowerCase();
         const p = document.getElementById('passIn').value;
         if(u === 'hassan' && p === '1234') { start(); return; }
-        let found = staff.find(s => s.user === u && s.pass === p);
+        let found = Object.values(staffRaw).find(s => s.user === u && s.pass === p);
         if(found) { start(); } else { document.getElementById('errorMsg').classList.remove('hidden'); }
     }
 
@@ -129,7 +159,11 @@
     function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('backBtnArea').innerHTML = id==='p1'?'':`<button onclick="goBack('${id}')" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">🔙</button>`; }
     function goBack(id) { if(id==='p2') showPage('p1'); else if(id==='p3') showPage('p2'); else if(id==='p4') showPage('p3'); }
     function logout() { localStorage.clear(); location.reload(); }
-    staffRef.on('value', s => { const val = s.val(); staff = val ? Object.values(val) : []; });
+    
+    staffRef.on('value', s => { 
+        staffRaw = s.val() || {}; 
+        renderStaffList(); 
+    });
 </script>
 </body>
 </html>
