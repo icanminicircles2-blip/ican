@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - System Dr.Mostafa</title>
+    <title>I CAN - Live Sync</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #4361ee; --secondary: #3f37c9; --success: #2ec4b6; --danger: #ef233c; --bg: #f8f9fa; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; direction: rtl; }
-        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--secondary), var(--primary)); display: flex; align-items: center; justify-content: center; z-index: 9999; overflow-y: auto; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin: 20px; }
-        .admin-section { background: #fff9db; padding: 15px; border-radius: 12px; border: 2px dashed #f59f00; margin-top: 20px; text-align: right; }
-        header { background: var(--secondary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--secondary), var(--primary)); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-card { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .admin-section { background: #fff9db; padding: 15px; border-radius: 12px; border: 2px dashed #f59f00; margin-top: 15px; text-align: right; }
+        header { background: var(--secondary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .grid-item { background: white; padding: 20px; text-align: center; border-radius: 15px; border: 1px solid #eee; cursor: pointer; border-bottom: 4px solid #ddd; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; display: block; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .grid-item { background: white; padding: 20px; text-align: center; border-radius: 15px; border: 1px solid #eee; cursor: pointer; border-bottom: 4px solid #ddd; position: relative; }
+        
+        /* التنوير اللحظي */
+        .has-goals { background: #e3f2fd !important; border-color: var(--primary) !important; border-bottom: 4px solid var(--primary) !important; color: var(--secondary); font-weight: bold; }
+        .has-goals::after { content: '✅'; position: absolute; top: 5px; right: 5px; font-size: 12px; }
+
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
-        .staff-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
@@ -31,26 +35,15 @@
     <div class="login-card">
         <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
         <h2>مركز I CAN</h2>
-        <div id="loginFields">
-            <input type="text" id="userIn" placeholder="اسم المستخدم">
-            <input type="password" id="passIn" placeholder="كلمة المرور">
-            <button class="btn-main" onclick="login()">دخول النظام</button>
-            <p id="errorMsg" style="color:red; font-size:12px;" class="hidden">بيانات الدخول خطأ!</p>
-        </div>
-        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; margin-top:20px; text-decoration: underline;">⚙️ إدارة حسابات الأخصائيين</button>
-        
+        <input type="text" id="userIn" placeholder="اسم المستخدم">
+        <input type="password" id="passIn" placeholder="كلمة المرور">
+        <button class="btn-main" onclick="login()">دخول</button>
+        <button onclick="toggleAdminPanel()" style="background:none; border:none; color:var(--primary); font-size:12px; margin-top:15px; cursor:pointer;">⚙️ الإدارة</button>
         <div id="adminPanel" class="admin-section hidden">
-            <h4 style="margin:0 0 10px 0; color:#e67e22;">التحكم في الأخصائيين</h4>
-            <input type="password" id="masterKey" placeholder="أدخل الكود السري (الخاص بدكتور مصطفى)">
-            
-            <div id="addStaffForm">
-                <input type="text" id="newStaffUser" placeholder="اسم المستخدم للأخصائي">
-                <input type="text" id="newStaffPass" placeholder="باسورد الأخصائي">
-                <button class="btn-main" style="background:var(--success)" onclick="addStaff()">تفعيل الحساب ✅</button>
-            </div>
-
-            <hr style="margin: 15px 0; border: 0.5px solid #f59f00;">
-            <p style="font-size: 12px; font-weight: bold;">قائمة الأخصائيين:</p>
+            <input type="password" id="masterKey" placeholder="كود د. مصطفى">
+            <input type="text" id="newStaffUser" placeholder="اسم الأخصائي">
+            <input type="text" id="newStaffPass" placeholder="الباسورد">
+            <button class="btn-main" style="background:var(--success)" onclick="addStaff()">إضافة</button>
             <div id="staffListDisplay"></div>
         </div>
     </div>
@@ -63,14 +56,10 @@
         <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:8px;">خروج</button>
     </header>
     <div class="container">
-        <div id="p1" class="page">
-            <input type="text" id="childName" placeholder="اكتب اسم الطفل...">
-            <button class="btn-main" onclick="addChild()">+ إضافة طفل جديد</button>
-            <div id="cList" style="margin-top:20px;"></div>
-        </div>
+        <div id="p1" class="page"><input type="text" id="childName" placeholder="اسم الطفل..."><button class="btn-main" onclick="addChild()">+ إضافة طفل</button><div id="cList" style="margin-top:20px;"></div></div>
         <div id="p2" class="page hidden"><div class="grid" id="mGrid"></div></div>
         <div id="p3" class="page hidden"><div class="grid" id="dGrid"></div><button class="btn-main" style="margin-top:20px; background:var(--success)" onclick="showReport()">📄 التقرير الشهري</button><div id="reportArea"></div></div>
-        <div id="p4" class="page hidden"><input type="text" id="goalTxt" placeholder="اكتب الهدف..."><button class="btn-main" onclick="addGoal()">حفظ الهدف ✅</button><div id="gList" style="margin-top:20px;"></div></div>
+        <div id="p4" class="page hidden"><input type="text" id="goalTxt" placeholder="اكتب الهدف..."><button class="btn-main" onclick="addGoal()">حفظ ✅</button><div id="gList" style="margin-top:20px;"></div></div>
     </div>
 </div>
 
@@ -85,84 +74,76 @@
     const domains = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
     function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); }
-
-    // إضافة أخصائي باستخدام الكود الجديد
-    function addStaff() {
-        const key = document.getElementById('masterKey').value;
-        const u = document.getElementById('newStaffUser').value.trim().toLowerCase();
-        const p = document.getElementById('newStaffPass').value;
-        
-        if(key !== 'dr.mostafa.ican') return alert('الكود السري للدكتور مصطفى خطأ!');
-        if(!u || !p) return alert('برجاء ملء جميع البيانات');
-        
-        staffRef.push({user: u, pass: p}).then(() => {
-            alert("✅ تم إضافة " + u + " بنجاح!");
-            document.getElementById('masterKey').value = '';
-            document.getElementById('newStaffUser').value = '';
-            document.getElementById('newStaffPass').value = '';
-            document.getElementById('adminPanel').classList.add('hidden');
-        });
+    function addStaff() { if(document.getElementById('masterKey').value !== 'dr.mostafa.ican') return alert('خطأ'); staffRef.push({user: document.getElementById('newStaffUser').value, pass: document.getElementById('newStaffPass').value}).then(()=>document.getElementById('adminPanel').classList.add('hidden')); }
+    function deleteStaff(keyId) { if(document.getElementById('masterKey').value !== 'dr.mostafa.ican') return alert('خطأ'); if(confirm('حذف؟')) staffRef.child(keyId).remove(); }
+    
+    function login() { 
+        const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value; 
+        if(u === 'hassan' && p === '1234') return start(); 
+        let f = Object.values(staffRaw).find(s => s.user === u && s.pass === p); 
+        if(f) start(); else alert('خطأ في البيانات'); 
     }
 
-    // حذف أخصائي باستخدام الكود الجديد
-    function deleteStaff(keyId) {
-        const key = document.getElementById('masterKey').value;
-        if(key !== 'dr.mostafa.ican') return alert('يجب كتابة الكود السري dr.mostafa.ican أولاً لتتمكن من الحذف!');
-        if(confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
-            staffRef.child(keyId).remove().then(() => alert('تم حذف الحساب'));
-        }
+    function start() { 
+        document.getElementById('loginPage').classList.add('hidden'); 
+        document.getElementById('app').classList.remove('hidden'); 
+        dbRef.on('value', s => { 
+            db = s.val() || []; 
+            // التحديث اللحظي للواجهة الحالية أياً كانت
+            refreshCurrentUI();
+        }); 
     }
 
-    function renderStaffList() {
-        const listDiv = document.getElementById('staffListDisplay');
-        let html = '';
-        for (let key in staffRaw) {
-            html += `<div class="staff-item">
-                        <span>👤 ${staffRaw[key].user}</span>
-                        <button onclick="deleteStaff('${key}')" style="background:none; border:none; color:red; cursor:pointer;">🗑️ حذف</button>
-                    </div>`;
-        }
-        listDiv.innerHTML = html || '<p style="font-size:11px; color:gray;">لا يوجد أخصائيين</p>';
+    function refreshCurrentUI() {
+        const p1 = document.getElementById('p1'), p3 = document.getElementById('p3'), p4 = document.getElementById('p4');
+        if (!p1.classList.contains('hidden')) renderC();
+        if (!p3.classList.contains('hidden')) renderD();
+        if (!p4.classList.contains('hidden')) renderG();
     }
 
-    function login() {
-        const u = document.getElementById('userIn').value.trim().toLowerCase();
-        const p = document.getElementById('passIn').value;
-        if(u === 'hassan' && p === '1234') { start(); return; }
-        let found = Object.values(staffRaw).find(s => s.user === u && s.pass === p);
-        if(found) { start(); } else { document.getElementById('errorMsg').classList.remove('hidden'); }
-    }
-
-    function start() { document.getElementById('loginPage').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); dbRef.on('value', s => { db = s.val() || []; renderC(); }); }
     function addChild() { let n = document.getElementById('childName').value; if(n){ db.push({name:n, data:{}}); dbRef.set(db); document.getElementById('childName').value=''; } }
-    function renderC() { document.getElementById('cList').innerHTML = db.map((c,i)=>`<div class="card" onclick="openP2(${i})"><span>👤 <b>${c.name}</b></span><button onclick="event.stopPropagation(); if(confirm('حذف؟')){db.splice(${i},1); dbRef.set(db);}" style="border:none; color:red; background:none; cursor:pointer; font-size:20px;">🗑️</button></div>`).join(''); }
-    function openP2(i) { curC=i; document.getElementById('navTitle').innerText = db[i].name; document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="grid-item" onclick="openP3('${m}')">📅<br>${m}</div>`).join(''); showPage('p2'); }
-    function openP3(m) { curM=m; document.getElementById('navTitle').innerText = curM; renderD(); showPage('p3'); }
-    function renderD() { document.getElementById('dGrid').innerHTML = domains.map(d=>`<div class="grid-item" onclick="openP4('${d}')">📂<br>${d}</div>`).join(''); }
-    function openP4(d) { curD=d; document.getElementById('navTitle').innerText = curD; renderG(); showPage('p4'); }
-    function addGoal() {
-        let t = document.getElementById('goalTxt').value; if(!t) return;
-        if(!db[curC].data) db[curC].data = {}; if(!db[curC].data[curM]) db[curC].data[curM] = {}; if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
-        db[curC].data[curM][curD].push({txt:t, help:'', prog:'0', gen:'لا'});
-        dbRef.set(db); document.getElementById('goalTxt').value=''; renderG();
+    function renderC() { document.getElementById('cList').innerHTML = db.map((c,i)=>`<div class="card" onclick="openP2(${i})"><span>👤 <b>${c.name}</b></span><button onclick="event.stopPropagation(); if(confirm('حذف؟')){db.splice(${i},1); dbRef.set(db);}" style="border:none; color:red; background:none; font-size:20px;">🗑️</button></div>`).join(''); }
+    
+    function openP2(i) { curC=i; document.getElementById('mGrid').innerHTML = months.map(m=>`<div class="grid-item" onclick="openP3('${m}')">📅<br>${m}</div>`).join(''); showPage('p2'); }
+    function openP3(m) { curM=m; renderD(); showPage('p3'); }
+
+    function renderD() {
+        document.getElementById('dGrid').innerHTML = domains.map(d => {
+            let has = (db[curC] && db[curC].data && db[curC].data[curM] && db[curC].data[curM][d] && db[curC].data[curM][d].length > 0);
+            return `<div class="grid-item ${has ? 'has-goals' : ''}" onclick="openP4('${d}')">📂<br>${d}</div>`;
+        }).join('');
     }
+
+    function openP4(d) { curD=d; renderG(); showPage('p4'); }
+    
+    function addGoal() {
+        let txt = document.getElementById('goalTxt').value; if(!txt) return;
+        if(!db[curC].data) db[curC].data = {}; if(!db[curC].data[curM]) db[curC].data[curM] = {}; if(!db[curC].data[curM][curD]) db[curC].data[curM][curD] = [];
+        db[curC].data[curM][curD].push({txt:txt, help:'بدون', prog:'0', gen:'لا'});
+        dbRef.set(db); document.getElementById('goalTxt').value='';
+    }
+
+    function removeGoal(idx) { if(confirm('حذف الهدف؟')) { db[curC].data[curM][curD].splice(idx,1); dbRef.set(db); } }
+
     function renderG() {
         let goals = (db[curC].data && db[curC].data[curM] && db[curC].data[curM][curD]) ? db[curC].data[curM][curD] : [];
-        document.getElementById('gList').innerHTML = goals.map((g,i)=>`<div class="card" style="display:block"><div style="display:flex; justify-content:space-between"><b>🎯 ${g.txt}</b> <button onclick="db[curC].data[curM][curD].splice(${i},1); dbRef.set(db);" style="border:none; color:red; background:none;">🗑️</button></div><div style="display:flex; gap:5px; margin-top:10px;"><select onchange="db[curC].data[curM][curD][${i}].help=this.value; dbRef.set(db)"><option value="">🆘 مساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].prog=this.value; dbRef.set(db)"><option value="">📈 إنجاز</option>${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].gen=this.value; dbRef.set(db)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join('');
+        document.getElementById('gList').innerHTML = goals.map((g,i)=>`<div class="card" style="display:block"><div style="display:flex; justify-content:space-between"><b>🎯 ${g.txt}</b> <button onclick="removeGoal(${i})" style="border:none; color:red; background:none;">🗑️</button></div><div style="display:flex; gap:5px; margin-top:10px;"><select onchange="db[curC].data[curM][curD][${i}].help=this.value; dbRef.set(db)"><option value="">🆘 مساعدة</option>${["بدون","FP","PP","FV","PV","M","G","P","V"].map(h=>`<option value="${h}" ${g.help==h?'selected':''}>${h}</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].prog=this.value; dbRef.set(db)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${g.prog==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="db[curC].data[curM][curD][${i}].gen=this.value; dbRef.set(db)"><option value="">🌍 تعميم</option><option value="نعم" ${g.gen=='نعم'?'selected':''}>نعم</option><option value="لا" ${g.gen=='لا'?'selected':''}>لا</option></select></div></div>`).join('');
     }
+
     function showReport() {
         let mData = db[curC].data[curM]; if(!mData) return alert("لا توجد بيانات");
-        let h = `<h3>تقرير ${db[curC].name} - ${curM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>إنجاز</th><th>تعميم</th></tr>`;
-        for(let d in mData) { mData[d].forEach(g => h+=`<tr><td>${d}</td><td>${g.txt}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`); }
+        let h = `<h3>تقرير ${db[curC].name} - ${curM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>إنجاز</th><th>تعميم</th></tr>`;
+        for(let d in mData) { mData[d].forEach(g => { h+=`<tr><td>${d}</td><td>${g.txt}</td><td>${g.help || '--'}</td><td>${g.prog}%</td><td>${g.gen}</td></tr>`; }); }
         document.getElementById('reportArea').innerHTML = h + `</table><button class="btn-main" onclick="window.print()">🖨️ طباعة</button>`;
     }
-    function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('backBtnArea').innerHTML = id==='p1'?'':`<button onclick="goBack('${id}')" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">🔙</button>`; }
+
+    function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('backBtnArea').innerHTML = id==='p1'?'':`<button onclick="goBack('${id}')" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">🔙</button>`; refreshCurrentUI(); }
     function goBack(id) { if(id==='p2') showPage('p1'); else if(id==='p3') showPage('p2'); else if(id==='p4') showPage('p3'); }
-    function logout() { localStorage.clear(); location.reload(); }
-    
+    function logout() { location.reload(); }
     staffRef.on('value', s => { 
         staffRaw = s.val() || {}; 
-        renderStaffList(); 
+        let h = ''; for (let k in staffRaw) h += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #ddd;"><span>👤 ${staffRaw[k].user}</span><button onclick="deleteStaff('${k}')" style="color:red; background:none; border:none;">🗑️</button></div>`;
+        document.getElementById('staffListDisplay').innerHTML = h;
     });
 </script>
 </body>
