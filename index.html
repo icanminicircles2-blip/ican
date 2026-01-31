@@ -84,8 +84,19 @@
     }
 
     function updateStaffUI() {
-        let h = '<b>قائمة الأخصائيين:</b>';
-        for(let id in staffs) h += `<div class="card"><span>👤 ${staffs[id].u}</span><button onclick="delStaff('${id}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
+        let h = '<b style="display:block; margin-bottom:10px;">قائمة الأخصائيين:</b>';
+        for(let id in staffs) {
+            h += `
+                <div class="card" style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; color:var(--s);">👤 ${staffs[id].u}</span>
+                        <button onclick="delStaff('${id}')" style="color:var(--err); border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button>
+                    </div>
+                    <div style="font-size:13px; color:#666; background:#f0f4ff; padding:4px 8px; border-radius:6px; width:fit-content;">
+                        🔑 كلمة المرور: <span style="color:var(--p); font-family:monospace; font-weight:bold;">${staffs[id].p}</span>
+                    </div>
+                </div>`;
+        }
         document.getElementById('staffListArea').innerHTML = h;
     }
 
@@ -161,39 +172,107 @@
     function openBin() { currUser = "الإدارة"; document.getElementById('loginPage').style.display = 'none'; document.getElementById('app').classList.remove('hidden'); view = 'bin'; render(); }
 
     function exportWeeklyRep() {
-        let data = db[selC][selM][selW];
-        if(!data) return alert("لا توجد بيانات");
-        let h = `<div style="padding:40px; direction:rtl;">
-            <h1 style="text-align:center;">مركز I CAN</h1>
-            <h3 style="text-align:center; border-bottom:1px solid #000;">تقرير الأسبوع: ${selW}</h3>
-            <p>الطفل: ${selC} | الشهر: ${selM}</p>
-            <table style="width:100%; border-collapse:collapse;" border="1">
-                <thead><tr style="background:#eee;"><th>المجال</th><th>الهدف</th><th>الإنجاز</th></tr></thead><tbody>`;
-        for(let d in data) for(let g in data[d]) h += `<tr><td>${d}</td><td>${g}</td><td align="center">${data[d][g].p}%</td></tr>`;
-        h += `</tbody></table><div class="no-print" style="margin-top:20px;"><button class="btn" onclick="window.print()">🖨️ طباعة</button><button class="btn" style="background:red" onclick="closeReport()">❌ إغلاق</button></div></div>`;
-        document.getElementById('repDiv').innerHTML = h;
-        document.getElementById('repDiv').classList.add('active');
-    }
+    let data = db[selC][selM][selW];
+    if(!data) return alert("لا توجد بيانات");
 
-    function exportMonthlyRep() {
-        let monthData = db[selC][selM];
-        let h = `<div style="padding:40px; direction:rtl;">
-            <h1 style="text-align:center;">مركز I CAN</h1>
-            <h2 style="text-align:center;">التقرير الشهري الشامل</h2>
-            <p>الطفل: ${selC} | الشهر: ${selM}</p><hr>`;
-        [1,2,3,4].forEach(num => {
-            let wk = "الاسبوع " + num;
-            if(monthData[wk]) {
-                h += `<h4>🗓️ ${wk}</h4><table style="width:100%; border-collapse:collapse; margin-bottom:20px;" border="1"><tr><th>المجال</th><th>الهدف</th><th>النسبة</th></tr>`;
-                for(let d in monthData[wk]) for(let g in monthData[wk][d]) h += `<tr><td>${d}</td><td>${g}</td><td align="center">${monthData[wk][d][g].p}%</td></tr>`;
-                h += `</table>`;
-            }
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <div style="border:3px solid var(--s); padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:var(--s); margin:0;">مركز I CAN</h1>
+            <h3 style="text-align:center; color:#555; border-bottom:2px solid var(--p); padding-bottom:10px;">تقرير متابعة الأسبوع: ${selW}</h3>
+            
+            <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px; border-right:5px solid var(--p);">
+                <span><b>👤 الطفل:</b> ${selC}</span>
+                <span><b>📅 الشهر:</b> ${selM}</span>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-top:10px;" border="1">
+                <thead>
+                    <tr style="background:var(--s); color:white;">
+                        <th style="padding:10px; border:1px solid #ddd;">المجال</th>
+                        <th style="padding:10px; border:1px solid #ddd;">الهدف التدريبي</th>
+                        <th style="padding:10px; border:1px solid #ddd;">نوع المساعدة</th>
+                        <th style="padding:10px; border:1px solid #ddd;">الإنجاز</th>
+                        <th style="padding:10px; border:1px solid #ddd;">التعميم</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    for(let d in data) {
+        let goals = Object.keys(data[d]);
+        goals.forEach((g, index) => {
+            let gData = data[d][g];
+            h += `<tr>
+                ${index === 0 ? `<td rowspan="${goals.length}" style="padding:10px; border:1px solid #ddd; font-weight:bold; background:#eef2ff; color:var(--s); text-align:center;">${d}</td>` : ''}
+                <td style="padding:10px; border:1px solid #ddd;">${g}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center; color:var(--p); font-weight:bold;">${gData.h || '-'}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:var(--ok);">${gData.p}%</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-size:18px;">${gData.g === 'نعم' ? '✅' : '❌'}</td>
+            </tr>`;
         });
-        h += `<div class="no-print"><button class="btn" onclick="window.print()">🖨️ طباعة التقرير الشهري</button><button class="btn" style="background:red" onclick="closeReport()">❌ إغلاق</button></div></div>`;
-        document.getElementById('repDiv').innerHTML = h;
-        document.getElementById('repDiv').classList.add('active');
     }
 
+    h += `</tbody></table>
+            <div style="margin-top:30px; display:flex; justify-content:space-between; color:#555;">
+                <span>توقيع الأخصائي: ...................</span>
+                <span>ختم المركز: ...................</span>
+            </div>
+        </div>
+        <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:2" onclick="window.print()">🖨️ طباعة الآن</button>
+            <button class="btn" style="background:var(--err); flex:1" onclick="closeReport()">❌ إغلاق</button>
+        </div>
+    </div>`;
+
+    document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').classList.add('active');
+}
+    function exportMonthlyRep() {
+    let monthData = db[selC][selM];
+    let h = `<div style="padding:30px; direction:rtl; font-family:sans-serif;">
+        <div style="border:4px double var(--s); padding:20px; border-radius:15px;">
+            <h1 style="text-align:center; color:var(--s); margin-bottom:5px;">مركز I CAN</h1>
+            <h2 style="text-align:center; color:var(--ok);">التقرير الشهري الشامل للمتابعة</h2>
+            <p style="text-align:center; background:#eee; padding:10px; border-radius:8px;"><b>الطفل:</b> ${selC} | <b>شهر:</b> ${selM}</p>`;
+
+    [1, 2, 3, 4].forEach(num => {
+        let wk = "الاسبوع " + num;
+        if(monthData[wk]) {
+            h += `<h3 style="color:white; background:var(--p); padding:8px 15px; border-radius:5px; margin-top:25px;">🗓️ ${wk}</h3>
+                  <table style="width:100%; border-collapse:collapse; margin-bottom:10px;" border="1">
+                    <tr style="background:#f1f1f1;">
+                        <th width="20%">المجال</th>
+                        <th width="40%">الهدف</th>
+                        <th width="15%">المساعدة</th>
+                        <th width="15%">النسبة</th>
+                        <th width="10%">تعميم</th>
+                    </tr>`;
+            
+            for(let d in monthData[wk]) {
+                let goals = Object.keys(monthData[wk][d]);
+                goals.forEach((g, index) => {
+                    let gData = monthData[wk][d][g];
+                    h += `<tr>
+                        ${index === 0 ? `<td rowspan="${goals.length}" style="padding:8px; border:1px solid #ddd; font-weight:bold; text-align:center; background:#f9faff;">${d}</td>` : ''}
+                        <td style="padding:8px; border:1px solid #ddd;">${g}</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center; font-weight:bold;">${gData.p}%</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${gData.g === 'نعم' ? '✅' : '❌'}</td>
+                    </tr>`;
+                });
+            }
+            h += `</table>`;
+        }
+    });
+
+    h += `</div>
+        <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:2" onclick="window.print()">🖨️ طباعة التقرير الشهري الشامل</button>
+            <button class="btn" style="background:var(--err); flex:1" onclick="closeReport()">❌ إغلاق</button>
+        </div>
+    </div>`;
+    document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').classList.add('active');
+}
     function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
 </script>
 </body>
