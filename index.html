@@ -18,14 +18,13 @@
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; font-size: 14px; }
         .btn { background: var(--p); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
-        #loginPage { position: absolute; top: 0; left: 0; width: 100%; min-height: 100%; background: var(--s); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 0; z-index: 9999; overflow-y: auto; }
-        .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; margin-bottom: 20px; }
+        #loginPage { position: absolute; top: 0; left: 0; width: 100%; min-height: 100%; background: var(--s); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 0; z-index: 9999; }
+        .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
         
         @media print {
-            .no-print, header, .btn { display: none !important; }
+            .no-print, header, .btn, hr { display: none !important; }
             body { background: white !important; }
-            #finalReportView { padding: 0 !important; }
-            #printArea { border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
+            #repDiv { position: static !important; display: block !important; }
         }
 
         #repDiv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; overflow-y: auto; display: none; }
@@ -40,13 +39,13 @@
         <input type="text" id="uIn" placeholder="اسم المستخدم">
         <input type="password" id="pIn" placeholder="كلمة المرور">
         <button class="btn" onclick="login()">دخول</button>
-        <button onclick="document.getElementById('admBox').classList.toggle('hidden')" style="background:none; border:none; color:var(--p); margin-top:20px; cursor:pointer;">⚙️ الإدارة والسلة</button>
-        <div id="admBox" class="adm-section hidden">
-            <input type="password" id="mKey" oninput="checkAdminKey(this.value)" placeholder="كود د. مصطفى">
+        <button onclick="document.getElementById('admBox').classList.toggle('hidden')" style="background:none; border:none; color:var(--p); margin-top:20px;">⚙️ الإدارة والسلة</button>
+        <div id="admBox" class="hidden">
+            <input type="password" id="mKey" oninput="checkAdminKey(this.value)" placeholder="كود الإدارة">
             <div id="secureContent" class="hidden">
-                <button class="btn" style="background:var(--err); margin-bottom:10px" onclick="openBin()">🗑️ فتح السلة</button>
+                <button class="btn" style="background:var(--err); margin-top:10px" onclick="openBin()">🗑️ فتح السلة</button>
                 <hr>
-                <input type="text" id="stName" placeholder="اسم الأخصائي الجديد">
+                <input type="text" id="stName" placeholder="اسم الأخصائي">
                 <input type="text" id="stPass" placeholder="الباسورد">
                 <button class="btn" style="background:var(--ok)" onclick="addStaff()">+ إضافة أخصائي</button>
                 <div id="staffListArea" style="margin-top:10px"></div>
@@ -64,6 +63,8 @@
     <div class="container" id="mainArea"></div>
 </div>
 
+<div id="repDiv"></div>
+
 <script>
     const firebaseConfig = { apiKey: "AIzaSyC4hocSi-1d56msjMoBSGLkxAfV6DRRfcA", databaseURL: "https://ican-center-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
@@ -71,7 +72,7 @@
     const stRef = firebase.database().ref('IC_STAFF_V1');
     const bnRef = firebase.database().ref('IC_BIN_V1');
 
-    let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selD = '', currUser = '';
+    let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selW = '', selD = '', currUser = '';
     const mons = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
@@ -83,17 +84,8 @@
     }
 
     function updateStaffUI() {
-        let h = '<b style="display:block; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;">قائمة الأخصائيين:</b>';
-        for(let id in staffs) {
-            h += `
-                <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <div style="text-align:right;">
-                        <span style="font-weight:bold; color:var(--s); display:block;">👤 ${staffs[id].u}</span>
-                        <span style="font-size:12px; color:#666;">🔑 كلمة المرور: <code style="background:#f0f4ff; padding:2px 5px; border-radius:4px; color:var(--p);">${staffs[id].p}</code></span>
-                    </div>
-                    <button onclick="delStaff('${id}')" style="color:var(--err); border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button>
-                </div>`;
-        }
+        let h = '<b>قائمة الأخصائيين:</b>';
+        for(let id in staffs) h += `<div class="card"><span>👤 ${staffs[id].u}</span><button onclick="delStaff('${id}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
         document.getElementById('staffListArea').innerHTML = h;
     }
 
@@ -111,10 +103,12 @@
 
     function render() {
         const area = document.getElementById('mainArea'), title = document.getElementById('navTitle'), back = document.getElementById('backBtn');
+        area.innerHTML = '';
+
         if(view === 'p1') {
             title.innerText = "الأطفال"; back.innerHTML = '';
-            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة</button><hr>';
-            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:var(--err); border:none; background:none;">🗑️</button></div>`;
+            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة طفل</button><hr>';
+            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
             area.innerHTML = h;
         } 
         else if(view === 'p2') {
@@ -124,108 +118,83 @@
         else if(view === 'p3') {
             title.innerText = selM; back.innerHTML = '<button onclick="view=\'p2\';render()" style="color:white; background:none; border:none;">🔙</button>';
             let h = '<div class="grid">';
-            doms.forEach(d => { let has = db[selC]?.[selM]?.[d]; h += `<div class="grid-item ${has?'has-goals':''}" onclick="selD='${d}'; view='p4'; render()">${d}</div>`; });
-            area.innerHTML = h + '</div><button class="btn" style="background:var(--ok); margin-top:10px" onclick="exportRep()">📄 تقرير</button><div id="repDiv"></div>';
+            [1, 2, 3, 4].forEach(wk => {
+                h += `<div class="grid-item" style="border-bottom-color:var(--ok)" onclick="selW='الاسبوع ${wk}'; view='p3_domains'; render()">📅 الأسبوع ${wk}</div>`;
+            });
+            h += '</div><hr><button class="btn" style="background:var(--p)" onclick="exportMonthlyRep()">📊 طباعة تقرير الشهر الشامل</button>';
+            area.innerHTML = h;
+        }
+        else if(view === 'p3_domains') {
+            title.innerText = selW; back.innerHTML = '<button onclick="view=\'p3\';render()" style="color:white; background:none; border:none;">🔙</button>';
+            let h = '<div class="grid">';
+            doms.forEach(d => {
+                let has = db[selC]?.[selM]?.[selW]?.[d];
+                h += `<div class="grid-item ${has?'has-goals':''}" onclick="selD='${d}'; view='p4'; render()">${d}</div>`;
+            });
+            area.innerHTML = h + '</div><button class="btn" style="background:var(--ok); margin-top:10px" onclick="exportWeeklyRep()">📄 طباعة تقرير الأسبوع</button>';
         }
         else if(view === 'p4') {
-            title.innerText = selD; back.innerHTML = '<button onclick="view=\'p3\';render()" style="color:white; background:none; border:none;">🔙</button>';
-            let gs = db[selC]?.[selM]?.[selD] || {};
-            let h = '<input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">حفظ</button><hr>';
+            title.innerText = selD; back.innerHTML = '<button onclick="view=\'p3_domains\';render()" style="color:white; background:none; border:none;">🔙</button>';
+            let gs = db[selC]?.[selM]?.[selW]?.[selD] || {};
+            let h = '<input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">+ إضافة هدف</button><hr>';
             for(let gn in gs) h += `<div class="card" style="display:block"><b>🎯 ${gn}</b><button onclick="toBinG('${gn}')" style="float:left; color:red; border:none; background:none;">🗑️</button><div style="display:flex; gap:5px; margin-top:5px"><select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select><select onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select></div></div>`;
             area.innerHTML = h;
         }
         else if(view === 'bin') {
-            title.innerText = "السلة"; back.innerHTML = '<button onclick="view=\'p1\';render()" style="color:white; background:none; border:none;">🔙</button>';
-            bnRef.on('value', s => {
+            title.innerText = "سلة المحذوفات"; back.innerHTML = '<button onclick="location.reload()" style="color:white; background:none; border:none;">🔙 خروج</button>';
+            bnRef.once('value', s => {
                 let b = s.val() || {}, h = '';
-                if(Object.keys(b).length > 0) h = `<button class="btn" style="background:var(--err); margin-bottom:15px" onclick="clearBin()">🔥 مسح السلة بالكامل</button>`;
-                for(let k in b) {
-                    let typeTag = b[k].type === 'c' ? '<span class="bin-tag" style="background:#4361ee">👤 طفل</span>' : '<span class="bin-tag" style="background:#ef233c">🎯 هدف</span>';
-                    h += `<div class="card" style="display:block">
-                        <div>${typeTag} <b>${k}</b></div>
-                        <span class="who-txt">🔴 بواسطة: ${b[k].by || 'غير معروف'}</span>
-                        <button class="btn" style="width:auto; margin-top:8px; padding:5px 10px; background:var(--ok)" onclick="restor('${k}')">استرداد</button>
-                    </div>`;
-                }
-                area.innerHTML = h || 'السلة فارغة حالياً';
+                for(let k in b) h += `<div class="card" style="display:block"><b>${k}</b> (${b[k].type=='c'?'طفل':'هدف'})<br><button class="btn" style="width:auto; background:var(--ok)" onclick="restor('${k}')">استرداد</button></div>`;
+                area.innerHTML = h || '<center>السلة فارغة</center>';
             });
         }
     }
 
     function addC() { let n = document.getElementById('cN').value; if(n) dbRef.child(n).update({ exists: true }); }
-    function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
-    function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selD}/${gn}/${f}`).set(v); }
+    function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
+    function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v); }
     function toBinC(n) { if(confirm('حذف الطفل؟')) { bnRef.child(n).set({ type:'c', d: db[n], by: currUser }); dbRef.child(n).remove(); } }
-    function toBinG(gn) { let g = db[selC][selM][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, dm: selD, by: currUser }); dbRef.child(`${selC}/${selM}/${selD}/${gn}`).remove(); }
-    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(!i) return; if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove(); }); }
-    function clearBin() { if(confirm('⚠️ مسح نهائي؟')) bnRef.remove(); }
+    function toBinG(gn) { let g = db[selC][selM][selW][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, w: selW, dm: selD, by: currUser }); dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove(); }
+    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.w}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove(); }); }
     function addStaff() { let u = document.getElementById('stName').value, p = document.getElementById('stPass').value; if(u && p) stRef.push({ u: u, p: p }); }
     function delStaff(id) { if(confirm('حذف؟')) stRef.child(id).remove(); }
-    function openBin() {
-    // 1. تحديد المستخدم الحالي كـ "مدير" عشان السيستم ميعلقش
-    currUser = "الإدارة"; 
-    
-    // 2. إخفاء صفحة اللوجن وإظهار واجهة التطبيق
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('app').classList.remove('hidden');
-    
-    // 3. توجيه الواجهة للسلة مباشرة
-    view = 'bin';
-    
-    // 4. تشغيل السماع لبيانات السلة ورسمها
-    bnRef.on('value', s => {
-        // تنفيذ الـ render يدوياً للتأكد من تحديث الشاشة
-        render(); 
-    });
-}
+    function openBin() { currUser = "الإدارة"; document.getElementById('loginPage').style.display = 'none'; document.getElementById('app').classList.remove('hidden'); view = 'bin'; render(); }
 
-    function exportRep() {
-        let data = db[selC][selM];
-        let hasData = false;
-        for(let d in data) { if (d !== 'exists' && Object.keys(data[d]).length > 0) { hasData = true; break; } }
-        if(!hasData) { alert("لا توجد أهداف!"); return; }
-
-        let h = `
-        <div id="finalReportView" style="background:var(--bg); min-height:100vh; padding:20px; direction:rtl;">
-            <div id="printArea" style="background:white; padding:40px; border-radius:15px; max-width:800px; margin:0 auto; border:1px solid #ddd;">
-                <h1 style="text-align:center; color:var(--s);">مركز I CAN</h1>
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px; background:#f0f4ff; padding:15px; border-radius:10px;">
-                    <span>👤 الطفل: ${selC}</span> <span>📅 الشهر: ${selM}</span>
-                </div>
-                <table style="width:100%; border-collapse:collapse;">
-                    <thead><tr style="background:var(--p); color:white;"><th style="padding:10px; border:1px solid #ddd;">المجال</th><th style="padding:10px; border:1px solid #ddd;">الهدف</th><th style="padding:10px; border:1px solid #ddd;">المساعدة</th><th style="padding:10px; border:1px solid #ddd;">الإنجاز</th><th style="padding:10px; border:1px solid #ddd;">التعميم</th></tr></thead>
-                    <tbody>`;
-
-        for(let d in data) {
-            if (d === 'exists') continue;
-            let goals = data[d];
-            let keys = Object.keys(goals);
-            keys.forEach((g, i) => {
-                h += `<tr>
-                    ${i === 0 ? `<td rowspan="${keys.length}" style="padding:10px; border:1px solid #ddd; font-weight:bold;">${d}</td>` : ''}
-                    <td style="padding:10px; border:1px solid #ddd;">${g}</td>
-                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].h || '-'}</td>
-                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].p}%</td>
-                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].g === 'نعم' ? '✅' : '❌'}</td>
-                </tr>`;
-            });
-        }
-        h += `</tbody></table></div>
-            <div style="max-width:800px; margin:20px auto; display:flex; gap:10px;" class="no-print">
-                <button class="btn" style="background:var(--ok); flex:2;" onclick="window.print()">🖨️ طباعة</button>
-                <button class="btn" style="background:var(--err); flex:1;" onclick="closeReport()">❌ إغلاق</button>
-            </div>
-        </div>`;
-
+    function exportWeeklyRep() {
+        let data = db[selC][selM][selW];
+        if(!data) return alert("لا توجد بيانات");
+        let h = `<div style="padding:40px; direction:rtl;">
+            <h1 style="text-align:center;">مركز I CAN</h1>
+            <h3 style="text-align:center; border-bottom:1px solid #000;">تقرير الأسبوع: ${selW}</h3>
+            <p>الطفل: ${selC} | الشهر: ${selM}</p>
+            <table style="width:100%; border-collapse:collapse;" border="1">
+                <thead><tr style="background:#eee;"><th>المجال</th><th>الهدف</th><th>الإنجاز</th></tr></thead><tbody>`;
+        for(let d in data) for(let g in data[d]) h += `<tr><td>${d}</td><td>${g}</td><td align="center">${data[d][g].p}%</td></tr>`;
+        h += `</tbody></table><div class="no-print" style="margin-top:20px;"><button class="btn" onclick="window.print()">🖨️ طباعة</button><button class="btn" style="background:red" onclick="closeReport()">❌ إغلاق</button></div></div>`;
         document.getElementById('repDiv').innerHTML = h;
         document.getElementById('repDiv').classList.add('active');
-        window.scrollTo(0,0);
     }
 
-    function closeReport() {
-        document.getElementById('repDiv').innerHTML = '';
-        document.getElementById('repDiv').classList.remove('active');
+    function exportMonthlyRep() {
+        let monthData = db[selC][selM];
+        let h = `<div style="padding:40px; direction:rtl;">
+            <h1 style="text-align:center;">مركز I CAN</h1>
+            <h2 style="text-align:center;">التقرير الشهري الشامل</h2>
+            <p>الطفل: ${selC} | الشهر: ${selM}</p><hr>`;
+        [1,2,3,4].forEach(num => {
+            let wk = "الاسبوع " + num;
+            if(monthData[wk]) {
+                h += `<h4>🗓️ ${wk}</h4><table style="width:100%; border-collapse:collapse; margin-bottom:20px;" border="1"><tr><th>المجال</th><th>الهدف</th><th>النسبة</th></tr>`;
+                for(let d in monthData[wk]) for(let g in monthData[wk][d]) h += `<tr><td>${d}</td><td>${g}</td><td align="center">${monthData[wk][d][g].p}%</td></tr>`;
+                h += `</table>`;
+            }
+        });
+        h += `<div class="no-print"><button class="btn" onclick="window.print()">🖨️ طباعة التقرير الشهري</button><button class="btn" style="background:red" onclick="closeReport()">❌ إغلاق</button></div></div>`;
+        document.getElementById('repDiv').innerHTML = h;
+        document.getElementById('repDiv').classList.add('active');
     }
+
+    function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
 </script>
 </body>
 </html>
