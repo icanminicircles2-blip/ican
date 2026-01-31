@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>I CAN - AUDIT LOG BIN</title>
+    <title>I CAN - SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -18,15 +18,18 @@
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; box-sizing: border-box; font-size: 14px; }
         .btn { background: var(--p); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
-        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--s); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
-        .adm-section { margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #ddd; text-align: right; }
-        .staff-item { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .bin-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
-        .who-txt { font-size: 12px; color: #d00000; font-weight: bold; margin-top: 4px; display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        @media print { header, .btn, input, select, .card button { display: none; } }
+        #loginPage { position: absolute; top: 0; left: 0; width: 100%; min-height: 100%; background: var(--s); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 0; z-index: 9999; overflow-y: auto; }
+        .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; margin-bottom: 20px; }
+        
+        @media print {
+            .no-print, header, .btn { display: none !important; }
+            body { background: white !important; }
+            #finalReportView { padding: 0 !important; }
+            #printArea { border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
+        }
+
+        #repDiv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; overflow-y: auto; display: none; }
+        #repDiv.active { display: block; }
     </style>
 </head>
 <body>
@@ -73,18 +76,38 @@
     const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي"];
 
     stRef.on('value', s => { staffs = s.val() || {}; updateStaffUI(); });
-    function checkAdminKey(v) { if(v === 'dr.mostafa.ican') document.getElementById('secureContent').classList.remove('hidden'); else document.getElementById('secureContent').classList.add('hidden'); }
+
+    function checkAdminKey(v) { 
+        if(v === 'رمضان كريم') document.getElementById('secureContent').classList.remove('hidden'); 
+        else document.getElementById('secureContent').classList.add('hidden'); 
+    }
+
     function updateStaffUI() {
-        let h = '<b>الأخصائيين:</b>';
-        for(let id in staffs) h += `<div class="staff-item">${staffs[id].u} <button onclick="delStaff('${id}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️</button></div>`;
+        let h = '<b style="display:block; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;">قائمة الأخصائيين:</b>';
+        for(let id in staffs) {
+            h += `
+                <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="text-align:right;">
+                        <span style="font-weight:bold; color:var(--s); display:block;">👤 ${staffs[id].u}</span>
+                        <span style="font-size:12px; color:#666;">🔑 كلمة المرور: <code style="background:#f0f4ff; padding:2px 5px; border-radius:4px; color:var(--p);">${staffs[id].p}</code></span>
+                    </div>
+                    <button onclick="delStaff('${id}')" style="color:var(--err); border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button>
+                </div>`;
+        }
         document.getElementById('staffListArea').innerHTML = h;
     }
+
     function login() {
         let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
         let isStf = Object.values(staffs).find(x=>x.u===u && x.p===p);
         if((u==='hassan' && p==='1234') || isStf) { currUser = u; showApp(); } else alert('خطأ');
     }
-    function showApp() { document.getElementById('loginPage').style.display='none'; document.getElementById('app').classList.remove('hidden'); dbRef.on('value', s => { db = s.val() || {}; render(); }); }
+
+    function showApp() { 
+        document.getElementById('loginPage').style.display='none'; 
+        document.getElementById('app').classList.remove('hidden'); 
+        dbRef.on('value', s => { db = s.val() || {}; render(); }); 
+    }
 
     function render() {
         const area = document.getElementById('mainArea'), title = document.getElementById('navTitle'), back = document.getElementById('backBtn');
@@ -118,9 +141,8 @@
                 if(Object.keys(b).length > 0) h = `<button class="btn" style="background:var(--err); margin-bottom:15px" onclick="clearBin()">🔥 مسح السلة بالكامل</button>`;
                 for(let k in b) {
                     let typeTag = b[k].type === 'c' ? '<span class="bin-tag" style="background:#4361ee">👤 طفل</span>' : '<span class="bin-tag" style="background:#ef233c">🎯 هدف</span>';
-                    let linkInfo = b[k].type === 'g' ? `<br><small style="color:#666">الطفل الأصلي: ${b[k].c}</small>` : '';
                     h += `<div class="card" style="display:block">
-                        <div>${typeTag} <b>${k}</b> ${linkInfo}</div>
+                        <div>${typeTag} <b>${k}</b></div>
                         <span class="who-txt">🔴 بواسطة: ${b[k].by || 'غير معروف'}</span>
                         <button class="btn" style="width:auto; margin-top:8px; padding:5px 10px; background:var(--ok)" onclick="restor('${k}')">استرداد</button>
                     </div>`;
@@ -136,15 +158,73 @@
     function toBinC(n) { if(confirm('حذف الطفل؟')) { bnRef.child(n).set({ type:'c', d: db[n], by: currUser }); dbRef.child(n).remove(); } }
     function toBinG(gn) { let g = db[selC][selM][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, dm: selD, by: currUser }); dbRef.child(`${selC}/${selM}/${selD}/${gn}`).remove(); }
     function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(!i) return; if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove(); }); }
-    function clearBin() { if(confirm('⚠️ مسح نهائي؟')) { if(confirm('تأكيد؟')) bnRef.remove(); } }
-    function addStaff() { let u = document.getElementById('stName').value, p = document.getElementById('stPass').value; if(u && p) stRef.push({ u: u, p: p }).then(() => { alert('تمت'); document.getElementById('stName').value=''; document.getElementById('stPass').value=''; }); }
+    function clearBin() { if(confirm('⚠️ مسح نهائي؟')) bnRef.remove(); }
+    function addStaff() { let u = document.getElementById('stName').value, p = document.getElementById('stPass').value; if(u && p) stRef.push({ u: u, p: p }); }
     function delStaff(id) { if(confirm('حذف؟')) stRef.child(id).remove(); }
-    function openBin() { view='bin'; showApp(); }
+    function openBin() {
+    // 1. تحديد المستخدم الحالي كـ "مدير" عشان السيستم ميعلقش
+    currUser = "الإدارة"; 
+    
+    // 2. إخفاء صفحة اللوجن وإظهار واجهة التطبيق
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+    
+    // 3. توجيه الواجهة للسلة مباشرة
+    view = 'bin';
+    
+    // 4. تشغيل السماع لبيانات السلة ورسمها
+    bnRef.on('value', s => {
+        // تنفيذ الـ render يدوياً للتأكد من تحديث الشاشة
+        render(); 
+    });
+}
+
     function exportRep() {
-        let h = `<h3>تقرير: ${selC} - ${selM}</h3><table><tr><th>المجال</th><th>الهدف</th><th>المساعدة</th><th>النسبة</th><th>التعميم</th></tr>`;
         let data = db[selC][selM];
-        for(let d in data) for(let g in data[d]) h += `<tr><td>${d}</td><td>${g}</td><td>${data[d][g].h}</td><td>${data[d][g].p}%</td><td>${data[d][g].g || 'لا'}</td></tr>`;
-        document.getElementById('repDiv').innerHTML = h + '</table><button class="btn" onclick="window.print()">طباعة</button>';
+        let hasData = false;
+        for(let d in data) { if (d !== 'exists' && Object.keys(data[d]).length > 0) { hasData = true; break; } }
+        if(!hasData) { alert("لا توجد أهداف!"); return; }
+
+        let h = `
+        <div id="finalReportView" style="background:var(--bg); min-height:100vh; padding:20px; direction:rtl;">
+            <div id="printArea" style="background:white; padding:40px; border-radius:15px; max-width:800px; margin:0 auto; border:1px solid #ddd;">
+                <h1 style="text-align:center; color:var(--s);">مركز I CAN</h1>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px; background:#f0f4ff; padding:15px; border-radius:10px;">
+                    <span>👤 الطفل: ${selC}</span> <span>📅 الشهر: ${selM}</span>
+                </div>
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead><tr style="background:var(--p); color:white;"><th style="padding:10px; border:1px solid #ddd;">المجال</th><th style="padding:10px; border:1px solid #ddd;">الهدف</th><th style="padding:10px; border:1px solid #ddd;">المساعدة</th><th style="padding:10px; border:1px solid #ddd;">الإنجاز</th><th style="padding:10px; border:1px solid #ddd;">التعميم</th></tr></thead>
+                    <tbody>`;
+
+        for(let d in data) {
+            if (d === 'exists') continue;
+            let goals = data[d];
+            let keys = Object.keys(goals);
+            keys.forEach((g, i) => {
+                h += `<tr>
+                    ${i === 0 ? `<td rowspan="${keys.length}" style="padding:10px; border:1px solid #ddd; font-weight:bold;">${d}</td>` : ''}
+                    <td style="padding:10px; border:1px solid #ddd;">${g}</td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].h || '-'}</td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].p}%</td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${goals[g].g === 'نعم' ? '✅' : '❌'}</td>
+                </tr>`;
+            });
+        }
+        h += `</tbody></table></div>
+            <div style="max-width:800px; margin:20px auto; display:flex; gap:10px;" class="no-print">
+                <button class="btn" style="background:var(--ok); flex:2;" onclick="window.print()">🖨️ طباعة</button>
+                <button class="btn" style="background:var(--err); flex:1;" onclick="closeReport()">❌ إغلاق</button>
+            </div>
+        </div>`;
+
+        document.getElementById('repDiv').innerHTML = h;
+        document.getElementById('repDiv').classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    function closeReport() {
+        document.getElementById('repDiv').innerHTML = '';
+        document.getElementById('repDiv').classList.remove('active');
     }
 </script>
 </body>
