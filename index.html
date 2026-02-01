@@ -421,21 +421,37 @@ function login() {
 // دالة الدخول بالبصمة
 async function loginWithBio() {
     try {
-        // طلب التحقق من هوية المستخدم (بصمة/وجه/نمط الجهاز)
-        // هذا الجزء يحاكي عملية التحقق البيومترية للمتصفح
-        const isEnrolled = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        
-        if (isEnrolled) {
-            // هنا نعتبر أن البصمة نجحت (لأن المتصفح يتولى حماية الحساس)
-            currUser = localStorage.getItem('savedUser');
-            alert("أهلاً بك مجدداً: " + currUser);
+        // 1. التحقق من دعم الجهاز للبصمة
+        const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (!available) return alert("جهازك لا يدعم البصمة أو الخاصية غير مفعلة في الإعدادات");
+
+        // 2. إنشاء "تحدي" حقيقي يظهر نافذة البصمة للنظام
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const options = {
+            publicKey: {
+                challenge: challenge,
+                timeout: 60000,
+                authenticatorSelection: { userVerification: "required" }
+            }
+        };
+
+        // هذه هي اللحظة التي تظهر فيها نافذة البصمة الحقيقية
+        await navigator.credentials.get(options);
+
+        // 3. إذا وصل الكود هنا، فهذا يعني أن البصمة نجحت
+        currUser = localStorage.getItem('savedUser');
+        if (currUser) {
+            alert("تم التحقق بنجاح. أهلاً بك: " + currUser);
             showApp();
         } else {
-            alert("الجهاز لا يدعم البصمة أو لم يتم إعدادها");
+            alert("لم يتم العثور على مستخدم مسجل للبصمة");
         }
     } catch (err) {
         console.error(err);
-        alert("فشل التحقق من البصمة");
+        // إذا قام المستخدم بإلغاء العملية أو فشلت البصمة
+        alert("فشل التحقق أو تم إلغاء العملية");
     }
 }
 </script>
