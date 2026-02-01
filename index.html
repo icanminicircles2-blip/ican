@@ -148,7 +148,19 @@
             title.innerText = selD; back.innerHTML = '<button onclick="view=\'p3_domains\';render()" style="color:white; background:none; border:none;">🔙</button>';
             let gs = db[selC]?.[selM]?.[selW]?.[selD] || {};
             let h = '<input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">+ إضافة هدف</button><hr>';
-            for(let gn in gs) h += `<div class="card" style="display:block"><b>🎯 ${gn}</b><button onclick="toBinG('${gn}')" style="float:left; color:red; border:none; background:none;">🗑️</button><div style="display:flex; gap:5px; margin-top:5px"><select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select><select onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select><select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select></div></div>`;
+            for(let gn in gs) h += `
+    <div class="card" style="display:block">
+        <b>🎯 ${gn}</b>
+        <div style="float:left; display:flex; gap:10px;">
+            <button onclick="editG('${gn}')" style="color:var(--p); border:none; background:none; cursor:pointer; font-size:16px;">📝</button>
+            <button onclick="toBinG('${gn}')" style="color:red; border:none; background:none; cursor:pointer; font-size:16px;">🗑️</button>
+        </div>
+        <div style="display:flex; gap:5px; margin-top:5px">
+            <select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select>
+            <select onchange="upG('${gn}','p',this.value)">${[0,25,50,75,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select>
+            <select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select>
+        </div>
+    </div>`;
             area.innerHTML = h;
         }
         else if(view === 'bin') {
@@ -161,12 +173,83 @@
         }
     }
 
-    function addC() { let n = document.getElementById('cN').value; if(n) dbRef.child(n).update({ exists: true }); }
+    function addC() {
+    let n = document.getElementById('cN').value.trim();
+    if(!n) return alert("يرجى إدخال اسم الطفل");
+    if(db[n]) return alert("هذا الطفل موجود بالفعل");
+    
+    dbRef.child(n).set({ exists: true }).then(() => {
+        document.getElementById('cN').value = '';
+    });
+}
     function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
     function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v); }
-    function toBinC(n) { if(confirm('حذف الطفل؟')) { bnRef.child(n).set({ type:'c', d: db[n], by: currUser }); dbRef.child(n).remove(); } }
-    function toBinG(gn) { let g = db[selC][selM][selW][selD][gn]; bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, w: selW, dm: selD, by: currUser }); dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove(); }
-    function restor(k) { bnRef.child(k).once('value', s => { let i = s.val(); if(i.type==='c') dbRef.child(k).set(i.d); else dbRef.child(`${i.c}/${i.m}/${i.w}/${i.dm}/${k}`).set(i.d); bnRef.child(k).remove(); }); }
+    function toBinC(n) {
+    if(!isAdmin()) return alert("عذراً، هذه الصلاحية للمدير فقط");
+    
+    if(confirm(`هل أنت متأكد من نقل الطفل (${n}) إلى سلة المحذوفات؟`)) {
+        // حفظ نسخة كاملة في السلة قبل الحذف
+        bnRef.child(n).set({
+            type: 'c',
+            d: db[n],
+            by: currUser,
+            deletedAt: new Date().toISOString()
+        }).then(() => {
+            dbRef.child(n).remove();
+            alert("تم نقل الطفل للسلة بنجاح");
+        });
+    }
+}
+    // دالة للتحقق هل المستخدم مدير أم لا
+function isAdmin() {
+    return currUser === "الإدارة" || currUser === "hassan";
+}
+
+// دالة تعديل اسم الهدف (جديدة)
+function editG(oldName) {
+    // تم إزالة شرط isAdmin هنا ليتمكن الأخصائي من تصحيح الأخطاء
+    let newName = prompt("تصحيح اسم الهدف:", oldName);
+    
+    if (newName && newName !== oldName && newName.trim() !== "") {
+        let path = `${selC}/${selM}/${selW}/${selD}`;
+        let data = db[selC][selM][selW][selD][oldName];
+        
+        // إنشاء الهدف بالاسم الصحيح وحذف القديم الخطأ
+        dbRef.child(`${path}/${newName}`).set(data).then(() => {
+            dbRef.child(`${path}/${oldName}`).remove();
+        }).catch(err => alert("عذراً، حدث خطأ أثناء التحديث"));
+    }
+}
+
+// دالة حذف الهدف (محدثة لتكون للمدير فقط)
+function toBinG(gn) { 
+    if(!isAdmin()) return alert("عذراً، الحذف للمدير فقط");
+    if(confirm('هل تريد نقل الهدف للسلة؟')){
+        let g = db[selC][selM][selW][selD][gn]; 
+        bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, w: selW, dm: selD, by: currUser }); 
+        dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove(); 
+    }
+}
+    function restor(k) {
+    bnRef.child(k).once('value', s => {
+        let i = s.val();
+        if(!i) return;
+        
+        let promise;
+        if(i.type === 'c') {
+            promise = dbRef.child(k).set(i.d);
+        } else {
+            // التأكد من وجود مسار الطفل والشهر قبل الاسترداد
+            promise = dbRef.child(`${i.c}/${i.m}/${i.w}/${i.dm}/${k}`).set(i.d);
+        }
+        
+        promise.then(() => {
+            bnRef.child(k).remove();
+            alert("تم الاسترداد بنجاح");
+            render(); // تحديث الواجهة
+        });
+    });
+}
     function addStaff() { let u = document.getElementById('stName').value, p = document.getElementById('stPass').value; if(u && p) stRef.push({ u: u, p: p }); }
     function delStaff(id) { if(confirm('حذف؟')) stRef.child(id).remove(); }
     function openBin() { currUser = "الإدارة"; document.getElementById('loginPage').style.display = 'none'; document.getElementById('app').classList.remove('hidden'); view = 'bin'; render(); }
@@ -274,6 +357,10 @@
     document.getElementById('repDiv').classList.add('active');
 }
     function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
+    function isAdmin() {
+    return currUser === "الإدارة" || currUser === "hassan";
+}
 </script>
 </body>
 </html>
+
