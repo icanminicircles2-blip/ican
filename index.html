@@ -419,39 +419,62 @@ function login() {
 }
 
 // دالة الدخول بالبصمة
-async function loginWithBio() {
+async function registerBio() {
     try {
-        // 1. التحقق من دعم الجهاز للبصمة
-        const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if (!available) return alert("جهازك لا يدعم البصمة أو الخاصية غير مفعلة في الإعدادات");
-
-        // 2. إنشاء "تحدي" حقيقي يظهر نافذة البصمة للنظام
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
+        const userID = new Uint8Array(16); // معرف عشوائي للمستخدم
+        window.crypto.getRandomValues(userID);
 
-        const options = {
+        const createOptions = {
             publicKey: {
                 challenge: challenge,
-                timeout: 60000,
-                authenticatorSelection: { userVerification: "required" }
+                rp: { name: "I CAN Center" },
+                user: {
+                    id: userID,
+                    name: currUser,
+                    displayName: currUser
+                },
+                pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
+                authenticatorSelection: { userVerification: "required" },
+                timeout: 60000
             }
         };
 
-        // هذه هي اللحظة التي تظهر فيها نافذة البصمة الحقيقية
-        await navigator.credentials.get(options);
-
-        // 3. إذا وصل الكود هنا، فهذا يعني أن البصمة نجحت
-        currUser = localStorage.getItem('savedUser');
-        if (currUser) {
-            alert("تم التحقق بنجاح. أهلاً بك: " + currUser);
-            showApp();
-        } else {
-            alert("لم يتم العثور على مستخدم مسجل للبصمة");
+        const credential = await navigator.credentials.create(createOptions);
+        if (credential) {
+            localStorage.setItem('bioRegistered', 'true');
+            localStorage.setItem('savedUser', currUser);
+            alert("تم تفعيل البصمة بنجاح على هذا الجهاز");
         }
     } catch (err) {
         console.error(err);
-        // إذا قام المستخدم بإلغاء العملية أو فشلت البصمة
-        alert("فشل التحقق أو تم إلغاء العملية");
+        alert("فشل تسجيل البصمة: تأكد من قفل الشاشة مفعل");
+    }
+}
+async function loginWithBio() {
+    try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const getOptions = {
+            publicKey: {
+                challenge: challenge,
+                timeout: 60000,
+                userVerification: "required"
+            }
+        };
+
+        // هنا الموبايل هيدور على الـ Passkey اللي سجلناه بـ create
+        const assertion = await navigator.credentials.get(getOptions);
+        
+        if (assertion) {
+            currUser = localStorage.getItem('savedUser');
+            alert("أهلاً بك مجدداً: " + currUser);
+            showApp();
+        }
+    } catch (err) {
+        alert("لم يتم العثور على مفتاح مرور أو تم إلغاء العملية");
     }
 }
 </script>
