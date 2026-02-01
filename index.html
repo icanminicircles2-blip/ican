@@ -6,6 +6,8 @@
     <title>I CAN - SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    select { cursor: pointer; background-color: #fdfdfd; }
+.card b { font-size: 15px; color: #333; }
     <style>
         :root { --p: #4361ee; --s: #3f37c9; --ok: #2ec4b6; --err: #ef233c; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
@@ -101,16 +103,31 @@
     }
 
     function login() {
-        let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
-        let isStf = Object.values(staffs).find(x=>x.u===u && x.p===p);
-        if((u==='hassan' && p==='1234') || isStf) { currUser = u; showApp(); } else alert('خطأ');
+    let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
+    let isStf = Object.values(staffs).find(x=>x.u===u && x.p===p);
+    
+    // إضافة يوزر دكتور مصطفى كحساب إداري ثابت
+    if((u==='mostafa' && p==='2016') || (u==='hassan' && p==='1234') || isStf) { 
+        currUser = u; 
+        showApp(); 
+    } else {
+        alert('خطأ في اسم المستخدم أو كلمة المرور');
     }
+}
 
     function showApp() { 
-        document.getElementById('loginPage').style.display='none'; 
-        document.getElementById('app').classList.remove('hidden'); 
-        dbRef.on('value', s => { db = s.val() || {}; render(); }); 
-    }
+    document.getElementById('loginPage').style.display='none'; 
+    document.getElementById('app').classList.remove('hidden'); 
+    
+    // جلب البيانات مرة واحدة فقط عند الدخول لضمان عدم اهتزاز الصفحة
+    dbRef.once('value', s => { 
+        db = s.val() || {}; 
+        render(); 
+    });
+
+    // مراقبة التغييرات في الخلفية لتحديث المتغير db فقط بدون إعادة الـ render القسري
+    dbRef.on('value', s => { db = s.val() || {}; }); 
+}
 
     function render() {
         const area = document.getElementById('mainArea'), title = document.getElementById('navTitle'), back = document.getElementById('backBtn');
@@ -182,52 +199,70 @@
         document.getElementById('cN').value = '';
     });
 }
-    function addG() { let t = document.getElementById('gT').value; if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }); }
+    function addG() { 
+    let tIn = document.getElementById('gT');
+    let t = tIn.value.trim(); 
+    if(!t) return;
+
+    dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t}`).set({ h: '', p: 0, g: 'لا' }).then(() => {
+        tIn.value = ''; // تفريغ الخانة عندك
+        render(); // تحديث واجهتك أنت فقط لتظهر الهدف الجديد
+    }); 
+}
     function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v); }
-    function toBinC(n) {
-    if(!isAdmin()) return alert("عذراً، هذه الصلاحية للمدير فقط");
-    
-    if(confirm(`هل أنت متأكد من نقل الطفل (${n}) إلى سلة المحذوفات؟`)) {
-        // حفظ نسخة كاملة في السلة قبل الحذف
-        bnRef.child(n).set({
-            type: 'c',
-            d: db[n],
-            by: currUser,
-            deletedAt: new Date().toISOString()
-        }).then(() => {
-            dbRef.child(n).remove();
-            alert("تم نقل الطفل للسلة بنجاح");
-        });
+    function toBinC(n) { 
+    if(!isAdmin()) {
+        return alert("عذراً، دكتور مصطفى فقط هو من يملك صلاحية حذف ملفات الأطفال");
     }
+    
+    if(confirm(`تحذير: هل أنت متأكد من نقل ملف الطفل (${n}) إلى السلة؟`)) { 
+        bnRef.child(n).set({ 
+            type:'c', 
+            d: db[n], 
+            by: currUser,
+            date: new Date().toLocaleString()
+        }).then(() => {
+            dbRef.child(n).remove(); 
+            alert("تم النقل للسلة");
+        });
+    } 
 }
     // دالة للتحقق هل المستخدم مدير أم لا
 function isAdmin() {
-    return currUser === "الإدارة" || currUser === "hassan";
+    // التحقق من أن المستخدم الحالي هو دكتور مصطفى أو المدير العام hassan
+    return currUser === "mostafa" || currUser === "hassan" || currUser === "الإدارة";
 }
 
 // دالة تعديل اسم الهدف (جديدة)
 function editG(oldName) {
-    // تم إزالة شرط isAdmin هنا ليتمكن الأخصائي من تصحيح الأخطاء
-    let newName = prompt("تصحيح اسم الهدف:", oldName);
-    
+    let newName = prompt("تعديل اسم الهدف:", oldName);
     if (newName && newName !== oldName && newName.trim() !== "") {
         let path = `${selC}/${selM}/${selW}/${selD}`;
         let data = db[selC][selM][selW][selD][oldName];
         
-        // إنشاء الهدف بالاسم الصحيح وحذف القديم الخطأ
         dbRef.child(`${path}/${newName}`).set(data).then(() => {
             dbRef.child(`${path}/${oldName}`).remove();
-        }).catch(err => alert("عذراً، حدث خطأ أثناء التحديث"));
+        });
     }
 }
 
 // دالة حذف الهدف (محدثة لتكون للمدير فقط)
 function toBinG(gn) { 
-    if(!isAdmin()) return alert("عذراً، الحذف للمدير فقط");
-    if(confirm('هل تريد نقل الهدف للسلة؟')){
+    // تم إلغاء شرط isAdmin ليكون المسح متاحاً للجميع
+    if(confirm(`هل تريد نقل الهدف (${gn}) إلى سلة المحذوفات؟`)) {
         let g = db[selC][selM][selW][selD][gn]; 
-        bnRef.child(gn).set({ type:'g', d: g, c: selC, m: selM, w: selW, dm: selD, by: currUser }); 
-        dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove(); 
+        bnRef.child(gn).set({ 
+            type: 'g', 
+            d: g, 
+            c: selC, 
+            m: selM, 
+            w: selW, 
+            dm: selD, 
+            by: currUser,
+            deletedAt: new Date().toLocaleString() // تسجيل وقت الحذف
+        }).then(() => {
+            dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove();
+        }); 
     }
 }
     function restor(k) {
@@ -353,9 +388,7 @@ function toBinG(gn) {
     document.getElementById('repDiv').classList.add('active');
 }
     function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
-    function isAdmin() {
-    return currUser === "الإدارة" || currUser === "hassan";
-}
+    
 </script>
 </body>
 </html>
