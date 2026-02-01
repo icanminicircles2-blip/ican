@@ -258,7 +258,7 @@ function toBinG(gn) {
     let data = db[selC][selM][selW];
     if(!data) return alert("لا توجد بيانات");
 
-    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif;">
         <div style="border:3px solid var(--s); padding:20px; border-radius:15px; background:white;">
             <h1 style="text-align:center; color:var(--s); margin:0;">مركز I CAN</h1>
             <h3 style="text-align:center; color:#555; border-bottom:2px solid var(--p); padding-bottom:10px;">تقرير متابعة الأسبوع: ${selW}</h3>
@@ -275,7 +275,6 @@ function toBinG(gn) {
                         <th style="padding:10px; border:1px solid #ddd;">الهدف التدريبي</th>
                         <th style="padding:10px; border:1px solid #ddd;">نوع المساعدة</th>
                         <th style="padding:10px; border:1px solid #ddd;">الإنجاز</th>
-                        <th style="padding:10px; border:1px solid #ddd;">التعميم</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -289,8 +288,7 @@ function toBinG(gn) {
                 <td style="padding:10px; border:1px solid #ddd;">${g}</td>
                 <td style="padding:10px; border:1px solid #ddd; text-align:center; color:var(--p); font-weight:bold;">${gData.h || '-'}</td>
                 <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:var(--ok);">${gData.p}%</td>
-                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-size:18px;">${gData.g === 'نعم' ? '✅' : '❌'}</td>
-            </tr>`;
+            </tr>`; // تم حذف خلية التعميم هنا
         });
     }
 
@@ -323,13 +321,12 @@ function toBinG(gn) {
             h += `<h3 style="color:white; background:var(--p); padding:8px 15px; border-radius:5px; margin-top:25px;">🗓️ ${wk}</h3>
                   <table style="width:100%; border-collapse:collapse; margin-bottom:10px;" border="1">
                     <tr style="background:#f1f1f1;">
-                        <th width="20%">المجال</th>
-                        <th width="40%">الهدف</th>
+                        <th width="25%">المجال</th>
+                        <th width="45%">الهدف</th>
                         <th width="15%">المساعدة</th>
                         <th width="15%">النسبة</th>
-                        <th width="10%">تعميم</th>
-                    </tr>`;
-            
+                    </tr>`; // تم حذف رأس عمود التعميم وتعديل النسب المئوية للعرض
+
             for(let d in monthData[wk]) {
                 let goals = Object.keys(monthData[wk][d]);
                 goals.forEach((g, index) => {
@@ -339,8 +336,7 @@ function toBinG(gn) {
                         <td style="padding:8px; border:1px solid #ddd;">${g}</td>
                         <td style="padding:8px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
                         <td style="padding:8px; border:1px solid #ddd; text-align:center; font-weight:bold;">${gData.p}%</td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${gData.g === 'نعم' ? '✅' : '❌'}</td>
-                    </tr>`;
+                    </tr>`; // تم حذف خلية التعميم هنا
                 });
             }
             h += `</table>`;
