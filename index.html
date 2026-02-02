@@ -6,6 +6,7 @@
     <title>I CAN - SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js"></script>
     <style>
         :root { --p: #4361ee; --s: #3f37c9; --ok: #2ec4b6; --err: #ef233c; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
@@ -30,6 +31,7 @@
         #repDiv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; overflow-y: auto; display: none; }
         #repDiv.active { display: block; }
     </style>
+    
 </head>
 <body>
 
@@ -105,28 +107,6 @@
         document.getElementById('staffListArea').innerHTML = h;
     }
 
-    function login() {
-    let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
-    let isStf = Object.values(staffs).find(x => x.u === u && x.p === p);
-    
-    if ((u === 'mostafa' && p === '2016') || (u === 'hassan' && p === '1234') || isStf) {
-        currUser = u;
-        
-        // إذا لم يكن قد سجل البصمة بعد، نطلب منه التسجيل
-        if (localStorage.getItem('bioRegistered') !== 'true') {
-            if (confirm("هل تريد تفعيل الدخول بالبصمة لهذا الجهاز؟")) {
-                registerBio(); // استدعاء دالة التسجيل التي تنشئ الـ Passkey
-            } else {
-                showApp();
-            }
-        } else {
-            showApp();
-        }
-    } else {
-        alert('خطأ في اسم المستخدم أو كلمة المرور');
-    }
-}
-
     function showApp() { 
     document.getElementById('loginPage').style.display='none'; 
     document.getElementById('app').classList.remove('hidden'); 
@@ -147,8 +127,16 @@
 
         if(view === 'p1') {
             title.innerText = "الأطفال"; back.innerHTML = '';
-            let h = '<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة طفل</button><hr>';
-            for(let n in db) h += `<div class="card" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
+let h = `
+    <input id="cN" placeholder="اسم الطفل الجديد...">
+    <button class="btn" onclick="addC()">+ إضافة طفل</button>
+    <hr>
+    <input type="text" id="searchC" placeholder="🔎 ابحث عن اسم طفل..." oninput="filterChildren(this.value)" style="margin-bottom:15px; border-color:var(--p)">
+    <div id="childrenList">`;
+    
+for(let n in db) h += `<div class="card child-card" data-name="${n}" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
+h += '</div>';
+area.innerHTML = h;            
             area.innerHTML = h;
         } 
         else if(view === 'p2') {
@@ -495,92 +483,66 @@ async function loginWithBio() {
     }
 }
 function downloadBackup() {
-    dbRef.once('value', s => {
+    console.log("بدء عملية النسخ...");
+    dbRef.once('value').then(s => {
         const data = s.val();
-        if (!data) return alert("مفيش بيانات!");
-
-        const newWindow = window.open();
-        if (!newWindow) return alert("المتصفح منع فتح الصفحة!");
-
-        let htmlContent = `
-        <html>
-        <head>
-            <title>سجل بيانات مركز I CAN</title>
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, sans-serif; direction: rtl; background: #f0f2f5; padding: 20px; }
-                .header { background: #3f37c9; color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 30px; }
-                .child-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 6px solid #4361ee; }
-                h2 { color: #3f37c9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-                h3 { color: #2ec4b6; margin-top: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-                th { background: #4361ee; color: white; padding: 12px; border: 1px solid #ddd; }
-                td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .no-print-btn { position: fixed; top: 20px; left: 20px; background: #ff9f1c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-                @media print { .no-print-btn { display: none; } body { background: white; padding: 0; } }
-            </style>
-        </head>
-        <body>
-            <button class="no-print-btn" onclick="window.print()">🖨️ طباعة أو حفظ PDF</button>
-            <div class="header">
-                <h1>📊 السجل الشامل لبيانات أطفال المركز</h1>
-                <p>تاريخ الاستخراج: ${new Date().toLocaleString('ar-EG')}</p>
-            </div>`;
-
-        // استعراض الأطفال
-        for (let child in data) {
-            if (typeof data[child] !== 'object') continue;
-            
-            htmlContent += `<div class="child-section">
-                <h2>👤 الطفل: ${child}</h2>`;
-            
-            // استعراض الشهور
-            for (let month in data[child]) {
-                if (month === 'exists') continue;
-                htmlContent += `<h3>📅 شهر: ${month}</h3>`;
-                
-                // استعراض الأسابيع
-                for (let week in data[child][month]) {
-                    htmlContent += `
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th colspan="4">${week}</th>
-                            </tr>
-                            <tr>
-                                <th>المجال</th>
-                                <th>الهدف</th>
-                                <th>المساعدة</th>
-                                <th>الإنجاز</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-                    
-                    let domains = data[child][month][week];
-                    for (let domain in domains) {
-                        let goals = domains[domain];
-                        let goalKeys = Object.keys(goals);
-                        
-                        goalKeys.forEach((goalName, index) => {
-                            let gData = goals[goalName];
-                            htmlContent += `
-                            <tr>
-                                ${index === 0 ? `<td rowspan="${goalKeys.length}" style="font-weight:bold; background:#eef2ff;">${domain}</td>` : ''}
-                                <td>${goalName}</td>
-                                <td>${gData.h || '-'}</td>
-                                <td style="font-weight:bold; color:#2ec4b6;">${gData.p}%</td>
-                            </tr>`;
-                        });
-                    }
-                    htmlContent += `</tbody></table>`;
-                }
-            }
-            htmlContent += `</div>`;
+        if (!data) {
+            alert("لا توجد بيانات");
+            return;
         }
 
-        htmlContent += `</body></html>`;
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
+        // بناء محتوى الملف بتنسيق HTML بسيط بيفهمه الوورد
+        let content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'></head>
+        <body lang=AR-EG style='direction:rtl;text-align:right;font-family:"Segoe UI",sans-serif;'>
+            <h1 style='text-align:center; color:#4361ee;'>سجل بيانات مركز I CAN</h1>
+            <p style='text-align:center;'>تاريخ النسخة: ${new Date().toLocaleString('ar-EG')}</p>
+        `;
+
+        for (let child in data) {
+            if (typeof data[child] !== 'object') continue;
+            content += `<h2 style='background:#4361ee; color:white; padding:10px;'>👤 الطفل: ${child}</h2>`;
+            
+            for (let month in data[child]) {
+                if (month === 'exists') continue;
+                for (let week in data[child][month]) {
+                    content += `<h3>📅 ${month} - ${week}</h3>
+                    <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+                        <tr style="background:#eee;">
+                            <th>المجال</th><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th>
+                        </tr>`;
+                    
+                    let domains = data[child][month][week];
+                    for (let d in domains) {
+                        for (let g in domains[d]) {
+                            let gData = domains[d][g];
+                            content += `<tr>
+                                <td>${d}</td><td>${g}</td>
+                                <td>${gData.h || '-'}</td><td>${gData.p || 0}%</td>
+                            </tr>`;
+                        }
+                    }
+                    content += `</table><br>`;
+                }
+            }
+            content += `<br style="page-break-after:always;">`; 
+        }
+        content += `</body></html>`;
+
+        // تحويل المحتوى لـ Blob بصيغة وورد
+        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ICAN_Backup_${new Date().toLocaleDateString('ar-EG')}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        console.log("تم التحميل بنجاح");
+    }).catch(err => {
+        alert("خطأ: " + err.message);
     });
 }
 </script>
