@@ -45,6 +45,10 @@
             <input type="password" id="mKey" oninput="checkAdminKey(this.value)" placeholder="كود الإدارة">
             <div id="secureContent" class="hidden">
                 <button class="btn" style="background:var(--err); margin-top:10px" onclick="openBin()">🗑️ فتح السلة</button>
+                
+<button class="btn" style="background:#6c757d; margin-top:10px" onclick="downloadBackup()">📥 تحميل نسخة احتياطية (Backup)</button>
+
+<hr> 
                 <hr>
                 <input type="text" id="stName" placeholder="اسم الأخصائي">
                 <input type="text" id="stPass" placeholder="الباسورد">
@@ -490,7 +494,95 @@ async function loginWithBio() {
         alert("لم يتم العثور على مفتاح مرور. ادخل بالباسورد أولاً لتفعيل البصمة.");
     }
 }
+function downloadBackup() {
+    dbRef.once('value', s => {
+        const data = s.val();
+        if (!data) return alert("مفيش بيانات!");
+
+        const newWindow = window.open();
+        if (!newWindow) return alert("المتصفح منع فتح الصفحة!");
+
+        let htmlContent = `
+        <html>
+        <head>
+            <title>سجل بيانات مركز I CAN</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; direction: rtl; background: #f0f2f5; padding: 20px; }
+                .header { background: #3f37c9; color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 30px; }
+                .child-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 6px solid #4361ee; }
+                h2 { color: #3f37c9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+                h3 { color: #2ec4b6; margin-top: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+                th { background: #4361ee; color: white; padding: 12px; border: 1px solid #ddd; }
+                td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .no-print-btn { position: fixed; top: 20px; left: 20px; background: #ff9f1c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+                @media print { .no-print-btn { display: none; } body { background: white; padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <button class="no-print-btn" onclick="window.print()">🖨️ طباعة أو حفظ PDF</button>
+            <div class="header">
+                <h1>📊 السجل الشامل لبيانات أطفال المركز</h1>
+                <p>تاريخ الاستخراج: ${new Date().toLocaleString('ar-EG')}</p>
+            </div>`;
+
+        // استعراض الأطفال
+        for (let child in data) {
+            if (typeof data[child] !== 'object') continue;
+            
+            htmlContent += `<div class="child-section">
+                <h2>👤 الطفل: ${child}</h2>`;
+            
+            // استعراض الشهور
+            for (let month in data[child]) {
+                if (month === 'exists') continue;
+                htmlContent += `<h3>📅 شهر: ${month}</h3>`;
+                
+                // استعراض الأسابيع
+                for (let week in data[child][month]) {
+                    htmlContent += `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th colspan="4">${week}</th>
+                            </tr>
+                            <tr>
+                                <th>المجال</th>
+                                <th>الهدف</th>
+                                <th>المساعدة</th>
+                                <th>الإنجاز</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                    
+                    let domains = data[child][month][week];
+                    for (let domain in domains) {
+                        let goals = domains[domain];
+                        let goalKeys = Object.keys(goals);
+                        
+                        goalKeys.forEach((goalName, index) => {
+                            let gData = goals[goalName];
+                            htmlContent += `
+                            <tr>
+                                ${index === 0 ? `<td rowspan="${goalKeys.length}" style="font-weight:bold; background:#eef2ff;">${domain}</td>` : ''}
+                                <td>${goalName}</td>
+                                <td>${gData.h || '-'}</td>
+                                <td style="font-weight:bold; color:#2ec4b6;">${gData.p}%</td>
+                            </tr>`;
+                        });
+                    }
+                    htmlContent += `</tbody></table>`;
+                }
+            }
+            htmlContent += `</div>`;
+        }
+
+        htmlContent += `</body></html>`;
+        newWindow.document.write(htmlContent);
+        newWindow.document.close();
+    });
+}
 </script>
 </body>
 </html>
-
