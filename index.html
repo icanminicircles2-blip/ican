@@ -545,6 +545,13 @@ function downloadBackup() {
         alert("خطأ: " + err.message);
     });
 }
+function filterChildren(val) {
+        document.querySelectorAll('.child-card').forEach(card => {
+            card.style.display = card.getAttribute('data-name').includes(val) ? 'flex' : 'none';
+        });
+    }
+    
+    function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
 </script>
 </body>
 </html>
