@@ -93,8 +93,7 @@
 
     let db = {}, staffs = {}, view = 'p1', selC = '', selM = '', selW = '', selD = '', currUser = '';
     const mons = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي", "مهني", "حياتي"];
-
+const doms = ["تخاطب", "تنمية مهارات", "رعاية ذاتية", "وظيفي", "حركي", "أكاديمي", "اجتماعي", "سلوكي", "نمائي", "حسي", "حسي مهاري", "مهني", "حياتي"];
     stRef.on('value', s => { staffs = s.val() || {}; updateStaffUI(); });
 
     function checkAdminKey(v) { 
@@ -193,8 +192,12 @@ area.innerHTML = h;
         </div>
         <div style="display:flex; gap:5px; margin-top:5px">
             <select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gs[gn].h==o?'selected':''}>${o}</option>`).join('')}</select>
-            <select onchange="upG('${gn}','p',this.value)">${[0,10,20,30,40,50,60,70,80,90,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}</select>
-            <select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select>
+<select onchange="upG('${gn}','p',this.value)">
+    
+    <option value="جاري التدريب" ${gs[gn].p=='جاري التدريب'?'selected':''}>جاري التدريب</option>
+    <option value="مستمر" ${gs[gn].p=='مستمر'?'selected':''}>مستمر</option>
+    ${[0,10,20,30,40,50,60,70,80,90,100].map(p=>`<option value="${p}" ${gs[gn].p==p?'selected':''}>${p}%</option>`).join('')}
+</select>            <select onchange="upG('${gn}','g',this.value)"><option value="لا" ${gs[gn].g=='لا'?'selected':''}>تعميم: لا</option><option value="نعم" ${gs[gn].g=='نعم'?'selected':''}>نعم</option></select>
         </div>
     </div>`;
             area.innerHTML = h;
