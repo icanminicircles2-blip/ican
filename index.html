@@ -28,7 +28,17 @@
             #repDiv { position: static !important; display: block !important; }
         }
 
-        #repDiv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; overflow-y: auto; display: none; }
+       #repDiv { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: white; 
+    z-index: 10000; 
+    overflow-y: auto; 
+    display: none; 
+}
         #repDiv.active { display: block; }
     </style>
     
@@ -289,42 +299,41 @@ function toBinG(gn) {
     function delStaff(id) { if(confirm('حذف؟')) stRef.child(id).remove(); }
     function openBin() { currUser = "الإدارة"; document.getElementById('loginPage').style.display = 'none'; document.getElementById('app').classList.remove('hidden'); view = 'bin'; render(); }
 
-    function exportWeeklyRep() {
+function exportWeeklyRep() {
     let data = db[selC][selM][selW];
     if(!data) return alert("لا توجد بيانات");
 
-    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif;">
-        <div style="border:3px solid var(--s); padding:20px; border-radius:15px; background:white;">
-            <h1 style="text-align:center; color:var(--s); margin:0;">مركز I CAN</h1>
-            <h3 style="text-align:center; color:#555; border-bottom:2px solid var(--p); padding-bottom:10px;">تقرير متابعة الأسبوع: ${selW}</h3>
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white; min-height:100vh;">
+        <div style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN</h1>
+            <h3 style="text-align:center; color:#555; border-bottom:2px solid #3f37c9; padding-bottom:10px;">تقرير متابعة الأسبوع: ${selW}</h3>
             
-            <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px; border-right:5px solid var(--p);">
+            <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px;">
                 <span><b>👤 الطفل:</b> ${selC}</span>
                 <span><b>📅 الشهر:</b> ${selM}</span>
             </div>
 
             <table style="width:100%; border-collapse:collapse; margin-top:10px;" border="1">
                 <thead>
-                    <tr style="background:var(--s); color:white;">
-                        <th style="padding:10px; border:1px solid #ddd;">المجال</th>
-                        <th style="padding:10px; border:1px solid #ddd;">الهدف التدريبي</th>
-                        <th style="padding:10px; border:1px solid #ddd;">نوع المساعدة</th>
+                    <tr style="background:#4361ee; color:white;">
+                        <th style="padding:10px; border:1px solid #ddd;">الهدف التدريبي (المجال)</th>
+                        <th style="padding:10px; border:1px solid #ddd;">المساعدة</th>
                         <th style="padding:10px; border:1px solid #ddd;">الإنجاز</th>
                     </tr>
                 </thead>
                 <tbody>`;
 
     for(let d in data) {
-        let goals = Object.keys(data[d]);
-        goals.forEach((g, index) => {
+        for(let g in data[d]) {
             let gData = data[d][g];
             h += `<tr>
-                ${index === 0 ? `<td rowspan="${goals.length}" style="padding:10px; border:1px solid #ddd; font-weight:bold; background:#eef2ff; color:var(--s); text-align:center;">${d}</td>` : ''}
-                <td style="padding:10px; border:1px solid #ddd;">${g}</td>
-                <td style="padding:10px; border:1px solid #ddd; text-align:center; color:var(--p); font-weight:bold;">${gData.h || '-'}</td>
-                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:var(--ok);">${gData.p}%</td>
-            </tr>`; // تم حذف خلية التعميم هنا
-        });
+                <td style="padding:10px; border:1px solid #ddd; text-align:right;">
+                    <b>${g}</b> <br> <small style="color:#666">المجال: ${d}</small>
+                </td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold;">${gData.p}%</td>
+            </tr>`;
+        }
     }
 
     h += `</tbody></table>
@@ -334,57 +343,72 @@ function toBinG(gn) {
             </div>
         </div>
         <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn" style="flex:2" onclick="window.print()">🖨️ طباعة الآن</button>
-            <button class="btn" style="background:var(--err); flex:1" onclick="closeReport()">❌ إغلاق</button>
+            <button class="btn" style="flex:2; background:#4361ee; color:white; padding:10px; border-radius:8px;" onclick="window.print()">🖨️ طباعة التقرير</button>
+            <button class="btn" style="background:#25D366; color:white; flex:1; border-radius:8px;" onclick="shareReport('wa')">🟢 واتساب</button>
+            <button class="btn" style="background:#ef233c; color:white; flex:1; border-radius:8px;" onclick="closeReport()">❌ إغلاق</button>
         </div>
     </div>`;
 
+    document.getElementById('app').style.display = 'none'; // إخفاء واجهة الاختيارات تماماً
     document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').style.display = 'block';
     document.getElementById('repDiv').classList.add('active');
 }
     function exportMonthlyRep() {
     let monthData = db[selC][selM];
-    let h = `<div style="padding:30px; direction:rtl; font-family:sans-serif;">
-        <div style="border:4px double var(--s); padding:20px; border-radius:15px;">
-            <h1 style="text-align:center; color:var(--s); margin-bottom:5px;">مركز I CAN</h1>
-            <h2 style="text-align:center; color:var(--ok);">التقرير الشهري الشامل للمتابعة</h2>
-            <p style="text-align:center; background:#eee; padding:10px; border-radius:8px;"><b>الطفل:</b> ${selC} | <b>شهر:</b> ${selM}</p>`;
+    if(!monthData) return alert("لا توجد بيانات");
 
-    [1, 2, 3, 4].forEach(num => {
-        let wk = "الاسبوع " + num;
-        if(monthData[wk]) {
-            h += `<h3 style="color:white; background:var(--p); padding:8px 15px; border-radius:5px; margin-top:25px;">🗓️ ${wk}</h3>
-                  <table style="width:100%; border-collapse:collapse; margin-bottom:10px;" border="1">
+    let h = `<div style="padding:30px; direction:rtl; font-family:sans-serif; background:white; min-height:100vh;">
+        <div style="border:4px double #4361ee; padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:#4361ee; margin-bottom:5px;">مركز I CAN</h1>
+            <h2 style="text-align:center; color:#2ecc71;">التقرير الشهري الشامل</h2>
+            <p style="text-align:center; background:#eee; padding:10px; border-radius:8px;"><b>الطفل:</b> ${selC} | <b>شهر:</b> ${selM}</p>
+            <table style="width:100%; border-collapse:collapse;" border="1">
+                <thead>
                     <tr style="background:#f1f1f1;">
-                        <th width="25%">المجال</th>
-                        <th width="45%">الهدف</th>
-                        <th width="15%">المساعدة</th>
-                        <th width="15%">النسبة</th>
-                    </tr>`; // تم حذف رأس عمود التعميم وتعديل النسب المئوية للعرض
+                        <th style="padding:10px;">المجال والهدف</th>
+                        <th style="padding:10px;">المساعدة</th>
+                        <th style="padding:10px;">الإنجاز</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
+    let summary = {};
+    [1, 2, 3, 4].forEach(n => {
+        let wk = "الاسبوع " + n;
+        if(monthData[wk]) {
             for(let d in monthData[wk]) {
-                let goals = Object.keys(monthData[wk][d]);
-                goals.forEach((g, index) => {
-                    let gData = monthData[wk][d][g];
-                    h += `<tr>
-                        ${index === 0 ? `<td rowspan="${goals.length}" style="padding:8px; border:1px solid #ddd; font-weight:bold; text-align:center; background:#f9faff;">${d}</td>` : ''}
-                        <td style="padding:8px; border:1px solid #ddd;">${g}</td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center; font-weight:bold;">${gData.p}%</td>
-                    </tr>`; // تم حذف خلية التعميم هنا
-                });
+                if(!summary[d]) summary[d] = [];
+                for(let g in monthData[wk][d]) {
+                    summary[d].push({ name: g, data: monthData[wk][d][g] });
+                }
             }
-            h += `</table>`;
         }
     });
 
-    h += `</div>
+    for(let d in summary) {
+        h += `<tr style="background:#eef2ff;"><td colspan="3" style="padding:8px; font-weight:bold; color:#4361ee;">📁 مجال: ${d}</td></tr>`;
+        summary[d].forEach(obj => {
+            h += `<tr>
+                <td style="padding:8px; border:1px solid #ddd; padding-right:25px;">• ${obj.name}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center;">${obj.data.h || '-'}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center;">${obj.data.p}%</td>
+            </tr>`;
+        });
+    }
+
+    h += `</tbody></table>
+        </div>
         <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn" style="flex:2" onclick="window.print()">🖨️ طباعة التقرير الشهري الشامل</button>
-            <button class="btn" style="background:var(--err); flex:1" onclick="closeReport()">❌ إغلاق</button>
+            <button class="btn" style="flex:2; background:#4361ee; color:white; padding:10px; border-radius:8px;" onclick="window.print()">🖨️ طباعة التقرير</button>
+            <button class="btn" style="background:#25D366; color:white; flex:1; border-radius:8px;" onclick="shareReport('wa')">🟢 واتساب</button>
+            <button class="btn" style="background:#ef233c; color:white; flex:1; border-radius:8px;" onclick="closeReport()">❌ إغلاق</button>
         </div>
     </div>`;
+
+    document.getElementById('app').style.display = 'none'; // إخفاء واجهة الاختيارات تماماً
     document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').style.display = 'block';
     document.getElementById('repDiv').classList.add('active');
 }
     function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
@@ -551,7 +575,24 @@ function filterChildren(val) {
         });
     }
     
-    function closeReport() { document.getElementById('repDiv').classList.remove('active'); }
+   function closeReport() {
+    document.getElementById('repDiv').style.display = 'none';
+    document.getElementById('repDiv').classList.remove('active');
+    document.getElementById('app').style.display = 'block'; // إعادة إظهار القوائم والأسابيع
+}
+function shareReport(platform) {
+    let msg = `📋 *تقرير متابعة مركز I CAN*\n\n`;
+    msg += `👤 *الطفل:* ${selC}\n`;
+    msg += `📅 *الفترة:* ${selM} ${selW || ''}\n`;
+    msg += `---------------------------\n`;
+    msg += `تم تحديث بيانات التقرير بنجاح. يمكنكم مراجعة التفاصيل في الجلسة القادمة.\n\n`;
+    msg += `شكراً لثقتكم بنا. ❤️`;
+
+    let encodedMsg = encodeURIComponent(msg);
+    let url = platform === 'wa' ? `https://wa.me/?text=${encodedMsg}` : `https://t.me/share/url?url=${encodedMsg}`;
+    window.open(url, '_blank');
+}
+
 </script>
 </body>
 </html>
