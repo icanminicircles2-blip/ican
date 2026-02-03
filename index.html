@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --p: #4361ee; --s: #3f37c9; --ok: #2ec4b6; --err: #ef233c; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
@@ -303,22 +304,20 @@ function exportWeeklyRep() {
     let data = db[selC][selM][selW];
     if(!data) return alert("لا توجد بيانات");
 
-    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white; min-height:100vh;">
-        <div style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
+        <div id="pdfContent" style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
             <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN</h1>
-            <h3 style="text-align:center; color:#555; border-bottom:2px solid #3f37c9; padding-bottom:10px;">تقرير متابعة الأسبوع: ${selW}</h3>
-            
+            <h3 style="text-align:center; color:#555;">تقرير متابعة الأسبوع: ${selW}</h3>
             <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px;">
                 <span><b>👤 الطفل:</b> ${selC}</span>
                 <span><b>📅 الشهر:</b> ${selM}</span>
             </div>
-
-            <table style="width:100%; border-collapse:collapse; margin-top:10px;" border="1">
+            <table style="width:100%; border-collapse:collapse;" border="1">
                 <thead>
                     <tr style="background:#4361ee; color:white;">
-                        <th style="padding:10px; border:1px solid #ddd;">الهدف التدريبي (المجال)</th>
-                        <th style="padding:10px; border:1px solid #ddd;">المساعدة</th>
-                        <th style="padding:10px; border:1px solid #ddd;">الإنجاز</th>
+                        <th style="padding:10px;">الهدف التدريبي</th>
+                        <th style="padding:10px;">المساعدة</th>
+                        <th style="padding:10px;">الإنجاز</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -327,32 +326,24 @@ function exportWeeklyRep() {
         for(let g in data[d]) {
             let gData = data[d][g];
             h += `<tr>
-                <td style="padding:10px; border:1px solid #ddd; text-align:right;">
-                    <b>${g}</b> <br> <small style="color:#666">المجال: ${d}</small>
-                </td>
+                <td style="padding:10px; border:1px solid #ddd;"><b>${g}</b> <br><small>(${d})</small></td>
                 <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
-                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold;">${gData.p}%</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.p}%</td>
             </tr>`;
         }
     }
 
-    h += `</tbody></table>
-            <div style="margin-top:30px; display:flex; justify-content:space-between; color:#555;">
-                <span>توقيع الأخصائي: ...................</span>
-                <span>ختم المركز: ...................</span>
-            </div>
-        </div>
+    h += `</tbody></table></div>
         <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn" style="flex:2; background:#4361ee; color:white; padding:10px; border-radius:8px;" onclick="window.print()">🖨️ طباعة التقرير</button>
-            <button class="btn" style="background:#25D366; color:white; flex:1; border-radius:8px;" onclick="shareReport('wa')">🟢 واتساب</button>
-            <button class="btn" style="background:#ef233c; color:white; flex:1; border-radius:8px;" onclick="closeReport()">❌ إغلاق</button>
+            <button class="btn" style="flex:1; background:#4361ee; color:white;" onclick="window.print()">🖨️ طباعة</button>
+            <button class="btn" style="flex:1; background:#e63946; color:white;" onclick="downloadPDFReport()">📄 تحميل PDF للمشاركة</button>
+            <button class="btn" style="flex:1; background:#6c757d; color:white;" onclick="closeReport()">❌ إغلاق</button>
         </div>
     </div>`;
 
-    document.getElementById('app').style.display = 'none'; // إخفاء واجهة الاختيارات تماماً
+    document.getElementById('app').style.display = 'none';
     document.getElementById('repDiv').innerHTML = h;
     document.getElementById('repDiv').style.display = 'block';
-    document.getElementById('repDiv').classList.add('active');
 }
     function exportMonthlyRep() {
     let monthData = db[selC][selM];
@@ -580,19 +571,24 @@ function filterChildren(val) {
     document.getElementById('repDiv').classList.remove('active');
     document.getElementById('app').style.display = 'block'; // إعادة إظهار القوائم والأسابيع
 }
-function shareReport(platform) {
-    let msg = `📋 *تقرير متابعة مركز I CAN*\n\n`;
-    msg += `👤 *الطفل:* ${selC}\n`;
-    msg += `📅 *الفترة:* ${selM} ${selW || ''}\n`;
-    msg += `---------------------------\n`;
-    msg += `تم تحديث بيانات التقرير بنجاح. يمكنكم مراجعة التفاصيل في الجلسة القادمة.\n\n`;
-    msg += `شكراً لثقتكم بنا. ❤️`;
+function downloadPDFReport() {
+    // 1. تحديد الجزء الذي سيتم تحويله (التقرير فقط)
+    const element = document.querySelector('#repDiv > div:first-child'); 
+    
+    // 2. إعدادات ملف الـ PDF
+    const opt = {
+        margin:       0.5,
+        filename:     `تقرير_${selC}_${selM}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
 
-    let encodedMsg = encodeURIComponent(msg);
-    let url = platform === 'wa' ? `https://wa.me/?text=${encodedMsg}` : `https://t.me/share/url?url=${encodedMsg}`;
-    window.open(url, '_blank');
+    // 3. التنفيذ
+    html2pdf().set(opt).from(element).save().then(() => {
+        alert("تم تجهيز ملف PDF بنجاح! يمكنك الآن إرساله عبر الواتساب.");
+    });
 }
-
 </script>
 </body>
 </html>
