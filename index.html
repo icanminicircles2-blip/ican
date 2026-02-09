@@ -189,7 +189,47 @@
     function fullBackupJSON() { dbRef.once('value').then(s => { const blob = new Blob([JSON.stringify(s.val(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup.json`; a.click(); }); }
     function fullRestoreJSON(e) { const reader = new FileReader(); reader.onload = (ev) => dbRef.set(JSON.parse(ev.target.result)).then(() => location.reload()); reader.readAsText(e.target.files[0]); }
     function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
-    function exportWeeklyRep() { /* كود التقرير كما هو */ alert("جاري الطباعة..."); window.print(); }
+    function exportWeeklyRep() { /* كود التقرير كما هو */ alert("جاري الطباعة..."); window.print();}
+    function editG(oldName) {
+    // فصل الاسم الحقيقي عن الكود المخفي قبل عرضه في صندوق التعديل
+    let realName = oldName.split("|ID|")[0];
+    let staffID = oldName.split("|ID|")[1] || "عام";
+    
+    let newName = prompt("تعديل اسم الهدف:", realName);
+    
+    if (newName && newName.trim() !== "" && newName !== realName) {
+        let path = `${selC}/${selM}/${selW}/${selD}`;
+        let data = db[selC][selM][selW][selD][oldName];
+        
+        // إعادة دمج الاسم الجديد مع نفس كود الأخصائي القديم
+        let newFullName = newName.trim() + " |ID|" + staffID;
+        
+        dbRef.child(`${path}/${newFullName}`).set(data).then(() => {
+            dbRef.child(`${path}/${oldName}`).remove();
+            render(); // تحديث الواجهة فوراً
+        });
+    }
+}
+function toBinG(gn) { 
+    if(confirm(`هل تريد نقل الهدف (${gn.split("|ID|")[0]}) إلى سلة المحذوفات؟`)) {
+        let gData = db[selC][selM][selW][selD][gn]; 
+        
+        bnRef.child(gn).set({ 
+            type: 'g', 
+            d: gData, 
+            c: selC, 
+            m: selM, 
+            w: selW, 
+            dm: selD, 
+            by: currUser,
+            deletedAt: new Date().toLocaleString()
+        }).then(() => {
+            dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove().then(() => {
+                render(); // تحديث الواجهة فوراً
+            });
+        }); 
+    }
+}
 </script>
 </body>
 </html>
