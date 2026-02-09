@@ -189,7 +189,54 @@
     function fullBackupJSON() { dbRef.once('value').then(s => { const blob = new Blob([JSON.stringify(s.val(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup.json`; a.click(); }); }
     function fullRestoreJSON(e) { const reader = new FileReader(); reader.onload = (ev) => dbRef.set(JSON.parse(ev.target.result)).then(() => location.reload()); reader.readAsText(e.target.files[0]); }
     function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
-    function exportWeeklyRep() { /* كود التقرير كما هو */ alert("جاري الطباعة..."); window.print();}
+    function exportWeeklyRep() {
+    let data = db[selC][selM][selW];
+    if(!data) return alert("لا توجد بيانات");
+
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
+        <div id="pdfContent" style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN</h1>
+            <h3 style="text-align:center; color:#555;">تقرير متابعة الأسبوع: ${selW}</h3>
+            <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px;">
+                <span><b>👤 الطفل:</b> ${selC}</span>
+                <span><b>📅 الشهر:</b> ${selM}</span>
+            </div>
+            <table style="width:100%; border-collapse:collapse;" border="1">
+                <thead>
+                    <tr style="background:#4361ee; color:white;">
+                        <th style="padding:10px;">المجال والهدف التدريبي</th>
+                        <th style="padding:10px; width:80px;">المساعدة</th>
+                        <th style="padding:10px; width:80px;">الإنجاز</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    for(let d in data) {
+        for(let g in data[d]) {
+            // تجاهل زر المراجعة من الظهور كهدف
+            if(g === 'isReviewed') continue;
+            
+            let gData = data[d][g];
+            h += `<tr>
+                <td style="padding:10px; border:1px solid #ddd;"><b>${g.split("|ID|")[0]}</b> <br><small>(${d})</small></td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.p || 0}%</td>
+            </tr>`;
+        }
+    }
+
+    h += `</tbody></table></div>
+        <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:1; background:#4361ee; color:white;" onclick="window.print()">🖨️ طباعة</button>
+            <button class="btn" style="flex:1; background:#e63946; color:white;" onclick="downloadPDFReport()">📄 تحميل PDF</button>
+            <button class="btn" style="flex:1; background:#6c757d; color:white;" onclick="closeReport()">❌ إغلاق</button>
+        </div>
+    </div>`;
+
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').style.display = 'block';
+}
     function editG(oldName) {
     // فصل الاسم الحقيقي عن الكود المخفي قبل عرضه في صندوق التعديل
     let realName = oldName.split("|ID|")[0];
@@ -229,6 +276,145 @@ function toBinG(gn) {
             });
         }); 
     }
+    // --- 1. دالة التقرير الشهري المصلحة ---
+function exportMonthlyRep() {
+    let monthData = db[selC][selM];
+    if(!monthData) return alert("لا توجد بيانات لهذا الشهر");
+
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
+        <div id="pdfContent" style="border:4px double #4361ee; padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:#4361ee; margin-bottom:5px;">مركز I CAN</h1>
+            <h2 style="text-align:center; color:#2ecc71; margin-top:0;">التقرير الشهري الشامل</h2>
+            <div style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px;">
+                <p style="margin:5px 0;"><b>👤 اسم الطفل:</b> ${selC}</p>
+                <p style="margin:5px 0;"><b>📅 تاريخ التقرير:</b> شهر ${selM}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; background:white;" border="1">
+                <thead>
+                    <tr style="background:#f1f1f1; color:#333;">
+                        <th style="padding:12px; border:1px solid #ddd;">المجال والهدف التدريبي</th>
+                        <th style="padding:12px; border:1px solid #ddd; width:80px;">المساعدة</th>
+                        <th style="padding:12px; border:1px solid #ddd; width:80px;">الإنجاز</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    let summary = {};
+    [1, 2, 3, 4].forEach(n => {
+        let wk = "الاسبوع " + n;
+        if(monthData[wk]) {
+            for(let d in monthData[wk]) {
+                if(!summary[d]) summary[d] = [];
+                for(let g in monthData[wk][d]) {
+                    // تجاهل زر المراجعة
+                    if(g !== 'isReviewed') {
+                        summary[d].push({ name: g, data: monthData[wk][d][g] });
+                    }
+                }
+            }
+        }
+    });
+
+    for(let d in summary) {
+        h += `<tr style="background:#eef2ff;">
+                <td colspan="3" style="padding:10px; font-weight:bold; color:#4361ee; border:1px solid #ddd;">📁 مجال: ${d}</td>
+              </tr>`;
+        summary[d].forEach(obj => {
+            h += `<tr>
+                <td style="padding:10px; border:1px solid #ddd; padding-right:25px;">• ${obj.name.split("|ID|")[0]}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">${obj.data.h || '-'}</td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#2ecc71;">${obj.data.p || 0}%</td>
+            </tr>`;
+        });
+    }
+
+    h += `</tbody></table>
+            <div style="margin-top:40px; display:flex; justify-content:space-between; color:#777; font-size:14px;">
+                <p>توقيع مدير المركز: ...................</p>
+                <p>تاريخ الاعتماد: ${new Date().toLocaleDateString('ar-EG')}</p>
+            </div>
+        </div>
+        <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:1; background:#4361ee; color:white;" onclick="window.print()">🖨️ طباعة ورقية</button>
+            <button class="btn" style="flex:1; background:#e63946; color:white;" onclick="downloadPDFReport()">📄 تحميل PDF</button>
+            <button class="btn" style="flex:1; background:#6c757d; color:white;" onclick="closeReport()">❌ إغلاق</button>
+        </div>
+    </div>`;
+
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').style.display = 'block';
+    document.getElementById('repDiv').classList.add('active');
+}
+
+// --- 2. دالة التقرير السنوي المصلحة ---
+function exportAnnualRep() {
+    let childData = db[selC];
+    if(!childData) return alert("لا توجد بيانات لهذا الطفل");
+
+    let months = Object.keys(childData).filter(m => m !== 'exists');
+    let monthlyScores = [];
+    let labels = [];
+
+    months.forEach(m => {
+        let totalP = 0;
+        let count = 0;
+        for(let w in childData[m]) {
+            for(let d in childData[m][w]) {
+                for(let g in childData[m][w][d]) {
+                    // شرط تجاهل زر المراجعة من الحسابات
+                    if(g !== 'isReviewed') {
+                        totalP += parseInt(childData[m][w][d][g].p || 0);
+                        count++;
+                    }
+                }
+            }
+        }
+        let avg = count > 0 ? (totalP / count).toFixed(1) : 0;
+        monthlyScores.push(avg);
+        labels.push(m);
+    });
+
+    let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
+        <div id="pdfContent" style="border:5px double #3f37c9; padding:20px; border-radius:15px; background:white;">
+            <h1 style="text-align:center; color:#4361ee; margin-bottom:5px;">مركز I CAN</h1>
+            <h2 style="text-align:center; color:#f72585;">حصاد التطور السنوي - ${new Date().getFullYear()}</h2>
+            <p style="text-align:center;"><b>اسم الطفل:</b> ${selC}</p>
+            <div style="margin:20px 0; height:300px;"><canvas id="annualChart"></canvas></div>
+            <table style="width:100%; border-collapse:collapse; margin-top:20px;" border="1">
+                <thead><tr style="background:#4361ee; color:white;"><th style="padding:10px;">الشهر</th><th style="padding:10px;">نسبة التطور العام</th></tr></thead>
+                <tbody>`;
+
+    labels.forEach((m, i) => {
+        h += `<tr><td style="padding:10px; text-align:center;">${m}</td><td style="padding:10px; text-align:center; font-weight:bold; color:#4361ee;">${monthlyScores[i]}%</td></tr>`;
+    });
+
+    h += `</tbody></table></div>
+        <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:1; background:#4361ee; color:white;" onclick="window.print()">🖨️ طباعة</button>
+            <button class="btn" style="flex:1; background:#6c757d; color:white;" onclick="closeReport()">❌ إغلاق</button>
+        </div>
+    </div>`;
+
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('repDiv').innerHTML = h;
+    document.getElementById('repDiv').style.display = 'block';
+
+    new Chart(document.getElementById('annualChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'مستوى التطور %',
+                data: monthlyScores,
+                borderColor: '#f72585',
+                backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
 }
 </script>
 </body>
