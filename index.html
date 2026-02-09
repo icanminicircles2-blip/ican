@@ -260,22 +260,15 @@
 function toBinG(gn) { 
     if(confirm(`هل تريد نقل الهدف (${gn.split("|ID|")[0]}) إلى سلة المحذوفات؟`)) {
         let gData = db[selC][selM][selW][selD][gn]; 
-        
         bnRef.child(gn).set({ 
-            type: 'g', 
-            d: gData, 
-            c: selC, 
-            m: selM, 
-            w: selW, 
-            dm: selD, 
-            by: currUser,
-            deletedAt: new Date().toLocaleString()
+            type: 'g', d: gData, c: selC, m: selM, w: selW, dm: selD, by: currUser, deletedAt: new Date().toLocaleString()
         }).then(() => {
             dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove().then(() => {
-                render(); // تحديث الواجهة فوراً
+                render(); 
             });
         }); 
     }
+} // القوس ده كان ناقص
     // --- 1. دالة التقرير الشهري المصلحة ---
 function exportMonthlyRep() {
     let monthData = db[selC][selM];
@@ -415,6 +408,23 @@ function exportAnnualRep() {
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
+}
+function closeReport() {
+    document.getElementById('repDiv').style.display = 'none';
+    document.getElementById('repDiv').classList.remove('active');
+    document.getElementById('app').style.display = 'block';
+}
+
+function downloadPDFReport() {
+    const element = document.querySelector('#pdfContent');
+    const opt = {
+        margin: 0.5,
+        filename: `تقرير_${selC}_${selM}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
 }
 </script>
 </body>
