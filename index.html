@@ -178,15 +178,65 @@
 
     // --- الدوال الأساسية ---
     function login() {
-        let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
-        if ((u === 'mostafa' && p === '2016') || (staffs[u] && staffs[u].p === p)) {
-            currUser = u; localStorage.setItem('currUser', u); showApp();
-        } else alert('خطأ في البيانات');
+        let u = document.getElementById('uIn').value.trim(); 
+        let p = document.getElementById('pIn').value.trim();
+
+        // التأكد من الحسابات الأساسية (الإدارة)
+        if ((u === 'mostafa' && p === '2016') || (u === 'hassan' && p === '1234')) {
+            currUser = u; 
+            localStorage.setItem('currUser', u); 
+            showApp();
+            return;
+        }
+
+        // البحث في قائمة الأخصائيين المضافين
+        let found = false;
+        for (let id in staffs) {
+            if (staffs[id].u === u && staffs[id].p === p) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            currUser = u; 
+            localStorage.setItem('currUser', u); 
+            showApp();
+        } else {
+            alert('خطأ في البيانات.. تأكد من اسم المستخدم وكلمة المرور');
+        }
     }
     window.onload = () => { if (localStorage.getItem('currUser')) { currUser = localStorage.getItem('currUser'); showApp(); } };
     function logout() { localStorage.removeItem('currUser'); location.reload(); }
     function addC() { let n = document.getElementById('cN').value.trim(); if(n) dbRef.child(n).set({ exists: true }); }
-    function addG() { let t = document.getElementById('gT').value.trim(); if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t + " |ID|" + currUser}`).set({ h: '', p: 0, g: 'لا' }).then(() => render()); }
+    function addStaff() {
+        let u = document.getElementById('stName').value.trim();
+        let p = document.getElementById('stPass').value.trim();
+        if (u && p) {
+            // إضافة الأخصائي في Firebase تحت مرجع IC_STAFF_V1
+            stRef.push({ u: u, p: p }).then(() => {
+                alert("تم إضافة الأخصائية بنجاح: " + u);
+                document.getElementById('stName').value = "";
+                document.getElementById('stPass').value = "";
+            }).catch(err => {
+                alert("عفواً، حدث خطأ أثناء الإضافة");
+            });
+        } else {
+            alert("يرجى إدخال الاسم والباسورد");
+        }
+    }
+
+    function delStaff(id) {
+        if (confirm("هل أنت متأكد من حذف هذه الأخصائية؟")) {
+            stRef.child(id).remove().then(() => {
+                alert("تم الحذف بنجاح");
+            });
+        }
+    }
+    function addG() { 
+    let t = document.getElementById('gT').value.trim(); 
+    if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t + " |ID|" + currUser}`).set({ h: '', p: 0, g: 'لا' }).then(() => render());
+}
     function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v); }
     function updateChildDayAtt(day, val) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/attendance/${day}`).set(val); }
     function toggleReview() {
