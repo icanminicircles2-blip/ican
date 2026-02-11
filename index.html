@@ -376,6 +376,95 @@
             </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
+    function exportAnnualRep() {
+        let childData = db[selC]; 
+        if(!childData) return alert("لا توجد بيانات لهذا الطفل");
+        
+        // جلب الشهور التي تحتوي على بيانات فقط وترتيبها
+        let monthsLabels = Object.keys(childData).filter(m => mons.includes(m));
+        let monthlyScores = [];
+        let labels = [];
+
+        monthsLabels.forEach(m => {
+            let totalP = 0, count = 0;
+            for(let w in childData[m]) {
+                for(let d in childData[m][w]) {
+                    for(let g in childData[m][w][d]) { 
+                        if(g !== 'isReviewed' && g !== 'attendance') { 
+                            let pValue = parseInt(childData[m][w][d][g].p || 0);
+                            totalP += pValue; 
+                            count++; 
+                        } 
+                    }
+                }
+            }
+            if (count > 0) {
+                monthlyScores.push((totalP / count).toFixed(1));
+                labels.push(m);
+            }
+        });
+
+        if (labels.length === 0) return alert("لا توجد بيانات كافية حالياً لرسم التطور السنوي");
+
+        let h = `<div id="pdfContent" style="padding:20px; background:white; min-height:100vh; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif;">
+            <div style="border:5px double #3f37c9; padding:20px; border-radius:15px; text-align:center; background:white;">
+                <h1 style="text-align:center; color:#4361ee; margin:0; letter-spacing: 5px;">I &nbsp; CAN</h1>
+                <h2 style="color:#f72585; margin-top:5px;">حصاد التطور السنوي - ${new Date().getFullYear()}</h2>
+                
+                <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin:20px 0; border:1px solid #bbdefb;">
+                    <p style="margin:0; font-size:18px;"><b>👤 اسم بطلنا:</b> <span style="color:#3f37c9">${selC}</span></p>
+                </div>
+                
+                <div style="height:350px; width:100%; margin:20px 0;">
+                    <canvas id="annualChart"></canvas>
+                </div>
+                
+                <div style="margin-top:30px; background:#f9f9f9; padding:15px; border-radius:10px; border:1px dashed #f72585;">
+                    <p style="color:#333; font-weight:bold;">✨ "هذا الرسم البياني يجسد رحلة بطلنا نحو القمة.. فخورون بكل تقدم يحرزه" ✨</p>
+                    <p style="font-weight:bold; color:#3f37c9; margin-top:10px;">مع تحيات إدارة مركز I &nbsp; CAN</p>
+                </div>
+            </div>
+        </div>
+        <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px; z-index:10001;">
+            <button class="btn" style="flex:1; background:#f72585;" onclick="generatePDF('التقرير_السنوي_${selC}')">📥 حفظ PDF التطور السنوي</button>
+            <button class="btn" style="flex:1; background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
+        </div>`;
+
+        document.getElementById('repDiv').innerHTML = h;
+        document.getElementById('repDiv').style.display = 'block';
+
+        // تشغيل الرسم البياني بعد التأكد من ظهور العنصر
+        setTimeout(() => {
+            const canvas = document.getElementById('annualChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'نسبة التطور المئوية %',
+                            data: monthlyScores,
+                            borderColor: '#f72585',
+                            backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointBackgroundColor: '#f72585',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, max: 100, ticks: { stepSize: 10 } }
+                        }
+                    }
+                });
+            }
+        }, 600);
+    }
 </script>
 </body>
 </html>
