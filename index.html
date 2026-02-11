@@ -236,12 +236,15 @@
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
         let attCount = { "حضر": 0, "غياب": 0, "تأخر > 15د": 0, "تأخر < 15د": 0, "إجازة": 0 };
+        let daysList = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
         
-        // تجميع الحضور من كل المجالات في هذا الأسبوع
+        // حساب الحضور: بنمر على كل مجال وبنشوف الأيام الـ 5
+        // لو مفيش داتا مسجلة ليوم معين، بنعتبره "حضر" تلقائياً
         for(let d in data) {
-            if(data[d].attendance) {
-                Object.values(data[d].attendance).forEach(status => { 
-                    if(attCount[status] !== undefined) attCount[status]++; 
+            if (doms.includes(d)) { // نتأكد إننا بنعد المجالات فقط
+                daysList.forEach(day => {
+                    let status = (data[d].attendance && data[d].attendance[day]) ? data[d].attendance[day] : "حضر";
+                    if(attCount[status] !== undefined) attCount[status]++;
                 });
             }
         }
@@ -257,7 +260,7 @@
                         <p style="margin:5px 0;"><b>📅 الأسبوع:</b> ${selW} (${selM})</p>
                     </div>
                     <div style="text-align:right; background:white; padding:10px; border-radius:8px; border:1px solid #90caf9; font-size:12px;">
-                        <b style="display:block; border-bottom:1px solid #eee; margin-bottom:5px; color:#4361ee;">📊 حضور الأسبوع:</b>
+                        <b style="display:block; border-bottom:1px solid #eee; margin-bottom:5px; color:#4361ee;">📊 إحصائية الحضور:</b>
                         <span>✅ حضور: ${attCount['حضر']}</span> | <span>❌ غياب: ${attCount['غياب']}</span><br>
                         <span>⏳ تأخير: ${attCount['تأخر > 15د'] + attCount['تأخر < 15د']}</span>
                     </div>
