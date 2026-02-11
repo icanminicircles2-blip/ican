@@ -216,44 +216,89 @@
     function closeReport() { document.getElementById('repDiv').style.display='none'; document.getElementById('app').style.display='block'; }
     function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
 
-    // --- التقارير ---
+    // --- تقارير مركز I CAN المحدثة ---
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
-        let h = `<div style="padding:20px; direction:rtl;">
-            <h2 style="text-align:center;">مركز I CAN - تقرير الأسبوع</h2>
-            <p>الطفل: ${selC} | الأسبوع: ${selW}</p>`;
-        
-        // إضافة جدول الحضور في التقرير
-        h += `<table border="1" style="width:100%; border-collapse:collapse; margin-bottom:20px; background:#fff3cd;">
-                <tr><th colspan="5">سجل الحضور في مجال ${selD}</th></tr>
-                <tr><th>الأحد</th><th>الاثنين</th><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th></tr>
-                <tr>`;
-        ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"].forEach(day => {
-            let status = data[selD]?.attendance?.[day] || "حضر";
-            h += `<td style="text-align:center;">${status}</td>`;
-        });
-        h += `</tr></table>`;
+        let h = `<div id="pdfContent" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif; background:white; min-height:100vh;">
+            <div style="border:3px solid var(--p); padding:20px; border-radius:20px;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h1 style="color:var(--p); margin:0;">مركز I CAN للقدرات الخاصة</h1>
+                    <h3 style="color:#555;">تقرير المتابعة الأسبوعي</h3>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #ddd;">
+                    <span><b>👤 اسم البطل:</b> ${selC}</span>
+                    <span><b>📅 التاريخ:</b> ${selM} - ${selW}</span>
+                </div>
 
-        h += `<table border="1" style="width:100%; border-collapse:collapse;">
-                <tr style="background:#eee;"><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th></tr>`;
+                <div style="background:#fff3cd; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #ffeeba;">
+                    <b style="color:#856404; display:block; margin-bottom:5px; text-align:center;">📊 سجل الحضور والمشاركة (مجال ${selD})</b>
+                    <table style="width:100%; border-collapse:collapse; background:white;">
+                        <tr style="background:#fdf6e3;">
+                            ${["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"].map(day => `<th style="padding:8px; border:1px solid #ffeeba; font-size:12px;">${day}</th>`).join('')}
+                        </tr>
+                        <tr>
+                            ${["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"].map(day => {
+                                let status = data[selD]?.attendance?.[day] || "حضر";
+                                return `<td style="padding:8px; border:1px solid #ffeeba; text-align:center; font-size:12px;">${status}</td>`;
+                            }).join('')}
+                        </tr>
+                    </table>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                    <thead>
+                        <tr style="background:var(--p); color:white;">
+                            <th style="padding:12px; border:1px solid #ddd;">المجال والهدف التدريبي</th>
+                            <th style="padding:12px; border:1px solid #ddd; width:100px;">نوع المساعدة</th>
+                            <th style="padding:12px; border:1px solid #ddd; width:80px;">الإنجاز</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+        
         for(let d in data) {
             for(let g in data[d]) {
                 if(g==='isReviewed' || g==='attendance') continue;
                 let gd = data[d][g];
-                h += `<tr><td>${g.split("|ID|")[0]} (${d})</td><td>${gd.h}</td><td>${gd.p}%</td></tr>`;
+                h += `<tr>
+                    <td style="padding:10px; border:1px solid #ddd;"><b>${g.split("|ID|")[0]}</b> <br><small style="color:#666;">(${d})</small></td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gd.h || '-'}</td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:var(--ok);">${gd.p}%</td>
+                </tr>`;
             }
         }
-        h += `</table><button class="btn no-print" onclick="window.print()">طباعة</button><button class="btn no-print" onclick="closeReport()">إغلاق</button></div>`;
+        
+        h += `</tbody></table>
+                <div style="margin-top:30px; border-top:2px solid #eee; padding-top:15px; text-align:center;">
+                    <p style="color:var(--s); font-weight:bold;">✨ "كل خطوة صغيرة هي إنجاز كبير في رحلة بطلنا .. فخورون بتقدمه المستمر" ✨</p>
+                    <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:14px; color:#666;">
+                        <span>توقيع الأخصائي: ...................</span>
+                        <span>اعتماد إدارة المركز: ...................</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px;">
+            <button class="btn" style="flex:1; background:var(--ok);" onclick="window.print()">🖨️ طباعة وإرسال لولي الأمر</button>
+            <button class="btn" style="flex:1; background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
+        </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
 
     function exportMonthlyRep() {
         let mData = db[selC][selM];
-        let h = `<div style="padding:20px; direction:rtl;"><h2>التقرير الشهري: ${selM}</h2>`;
+        let h = `<div id="pdfContent" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
+            <div style="border:4px double var(--p); padding:25px; border-radius:15px;">
+                <h1 style="text-align:center; color:var(--p);">تقرير الحصاد الشهري - مركز I CAN</h1>
+                <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb;">
+                    <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:var(--s)">${selC}</span></p>
+                    <p style="margin:5px 0;"><b>📅 تقرير شهر:</b> ${selM}</p>
+                </div>`;
+        
         let sum = {};
         [1,2,3,4,5].forEach(n => {
             let wk = "الاسبوع " + n;
-            if(mData[wk]) {
+            if(mData?.[wk]) {
                 for(let d in mData[wk]) {
                     if(!sum[d]) sum[d] = [];
                     for(let g in mData[wk][d]) {
@@ -262,12 +307,28 @@
                 }
             }
         });
+
         for(let d in sum) {
-            h += `<h3>📁 ${d}</h3><table border="1" style="width:100%;">`;
-            sum[d].forEach(i => { h += `<tr><td>${i.n.split("|ID|")[0]}</td><td>${i.d.p}%</td></tr>`; });
-            h += `</table>`;
+            h += `<div style="margin-bottom:20px;">
+                <h3 style="background:var(--s); color:white; padding:8px; border-radius:5px;">📁 مجال: ${d}</h3>
+                <table style="width:100%; border-collapse:collapse;" border="1">
+                    <tr style="background:#f1f1f1;"><th>الهدف التدريبي</th><th style="width:100px;">نسبة الإنجاز</th></tr>`;
+            sum[d].forEach(i => {
+                h += `<tr><td style="padding:8px;">${i.n.split("|ID|")[0]}</td><td style="text-align:center; font-weight:bold; color:var(--ok);">${i.d.p}%</td></tr>`;
+            });
+            h += `</table></div>`;
         }
-        h += `<button class="btn no-print" onclick="window.print()">طباعة</button><button class="btn no-print" onclick="closeReport()">إغلاق</button></div>`;
+
+        h += `<div style="margin-top:40px; text-align:center; background:#f9f9f9; padding:20px; border-radius:15px;">
+                <h3 style="color:var(--p);">كلمة المركز لولي الأمر</h3>
+                <p>نشكركم على ثقتكم الغالية، ونسعد دائماً بكوننا شركاء في نجاح وتطور طفلكم. نحن هنا لندعم أحلامه خطوة بخطوة.</p>
+                <p style="font-weight:bold; margin-top:10px;">مع تحيات إدارة مركز I CAN ✨</p>
+            </div>
+            </div></div>
+            <div class="no-print" style="margin-top:20px; display:flex; gap:10px; padding:20px;">
+                <button class="btn" style="flex:1; background:var(--p);" onclick="window.print()">🖨️ طباعة التقرير الشهري</button>
+                <button class="btn" style="flex:1; background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
+            </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
 
@@ -277,28 +338,56 @@
         let scores = [], labels = [];
         months.forEach(m => {
             let total = 0, count = 0;
-            for(let w in childData[m]) {
-                for(let d in childData[m][w]) {
-                    for(let g in childData[m][w][d]) {
-                        if(g!=='isReviewed' && g!=='attendance') { total += parseInt(childData[m][w][d][g].p || 0); count++; }
+            if(childData[m]) {
+                for(let w in childData[m]) {
+                    for(let d in childData[m][w]) {
+                        for(let g in childData[m][w][d]) {
+                            if(g!=='isReviewed' && g!=='attendance') { 
+                                let p = parseInt(childData[m][w][d][g].p || 0);
+                                total += p; count++; 
+                            }
+                        }
                     }
                 }
             }
             scores.push(count > 0 ? (total/count).toFixed(1) : 0);
             labels.push(m);
         });
-        let h = `<div style="padding:20px;"><h2>تطور الطفل السنوي: ${selC}</h2>
-            <div style="height:300px;"><canvas id="annualChart"></canvas></div>
-            <button class="btn" onclick="closeReport()">إغلاق</button></div>`;
+
+        let h = `<div style="padding:30px; background:white; min-height:100vh; direction:rtl;">
+            <div style="border:5px double var(--s); padding:20px; border-radius:15px; text-align:center;">
+                <h1 style="color:var(--s);">حصاد التطور السنوي - I CAN</h1>
+                <h3>البطل: ${selC}</h3>
+                <div style="height:400px; margin:20px 0;"><canvas id="annualChart"></canvas></div>
+                <p style="margin-top:20px; font-style:italic;">هذا الرسم يوضح مدى التطور والتقدم الذي حققه طفلنا خلال العام</p>
+            </div>
+            <button class="btn no-print" style="margin-top:20px;" onclick="closeReport()">❌ إغلاق</button>
+        </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
         
         setTimeout(() => {
             new Chart(document.getElementById('annualChart'), {
                 type: 'line',
-                data: { labels, datasets: [{ label: 'التطور %', data: scores, borderColor: '#f72585', tension: 0.3, fill: true, backgroundColor: 'rgba(247, 37, 133, 0.1)' }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        label: 'نسبة التطور المئوية', 
+                        data: scores, 
+                        borderColor: '#f72585', 
+                        backgroundColor: 'rgba(247, 37, 133, 0.2)',
+                        tension: 0.4, 
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f72585'
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'نسبة الإنجاز %' } } } 
+                }
             });
-        }, 300);
+        }, 500);
     }
 </script>
 </body>
