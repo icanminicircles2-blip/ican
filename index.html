@@ -465,6 +465,51 @@
             }
         }, 600);
     }
+    // --- دوال النسخ الاحتياطي والاسترداد الشامل ---
+    function fullBackupJSON() {
+        // جلب البيانات من المرجع الرئيسي لقاعدة البيانات
+        dbRef.once('value').then(s => {
+            const data = s.val();
+            if (!data) return alert("لا توجد بيانات للنسخ الاحتياطي");
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            const fileName = `ICAN_Backup_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+            
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
+            
+            alert("تم تحميل النسخة الاحتياطية بنجاح باسم: " + fileName);
+        }).catch(err => {
+            console.error("خطأ أثناء النسخ الاحتياطي: ", err);
+            alert("فشل في إنشاء النسخة الاحتياطية");
+        });
+    }
+
+    function fullRestoreJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (confirm("تحذير: هذا الإجراء سيقوم باستبدال قاعدة البيانات الحالية بالكامل بالملف المختار. هل أنت متأكد؟")) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    // رفع البيانات الجديدة واستبدال القديمة
+                    dbRef.set(jsonData).then(() => {
+                        alert("تم استرداد البيانات بنجاح! سيتم إعادة تحميل التطبيق.");
+                        location.reload();
+                    });
+                } catch (err) {
+                    alert("الملف غير صالح، يرجى اختيار ملف JSON صحيح.");
+                }
+            };
+            reader.readAsText(file);
+        }
+        // مسح قيمة المدخل لضمان إمكانية اختيار نفس الملف مرة أخرى
+        event.target.value = "";
+    }
 </script>
 </body>
 </html>
