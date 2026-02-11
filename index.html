@@ -6,7 +6,6 @@
     <title>I CAN - SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -23,7 +22,6 @@
         .hidden { display: none !important; }
         #loginPage { position: absolute; top: 0; left: 0; width: 100%; min-height: 100%; background: var(--s); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 0; z-index: 9999; }
         .login-card { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
-        @media print { .no-print, header, .btn, hr { display: none !important; } body { background: white !important; } #repDiv { position: static !important; display: block !important; } }
         #repDiv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; overflow-y: auto; display: none; }
         #repDiv.active { display: block; }
     </style>
@@ -113,8 +111,7 @@
             area.innerHTML = `<div class="grid">${mons.map(m => `<div class="grid-item" onclick="selM='${m}'; view='p3'; render()">${m}</div>`).join('')}</div><hr><button class="btn" style="background:#f72585" onclick="exportAnnualRep()">📊 تقرير سنوي</button>`;
         }
         else if(view === 'p3') {
-            title.innerText = selM; 
-            back.innerHTML = '<button onclick="view=\'p2\';render()" style="color:white; background:none; border:none;">🔙</button>';
+            title.innerText = selM; back.innerHTML = '<button onclick="view=\'p2\';render()" style="color:white; background:none; border:none;">🔙</button>';
             let h = '<div class="grid">';
             [1, 2, 3, 4, 5].forEach(wk => { 
                 h += `<div class="grid-item" onclick="selW='الاسبوع ${wk}'; view='p3_domains'; render()">📅 الأسبوع ${wk}</div>`; 
@@ -132,7 +129,6 @@
         }
         else if(view === 'p4') {
             title.innerText = selD; back.innerHTML = '<button onclick="view=\'p3_domains\';render()" style="color:white; background:none; border:none;">🔙</button>';
-            
             let gs = db[selC]?.[selM]?.[selW]?.[selD] || {};
             let isRev = gs.isReviewed || false;
             let days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
@@ -143,44 +139,36 @@
                 return uA.localeCompare(uB);
             });
 
-            let h = `
-                <div id="revStatusBtn" class="card" style="justify-content:center; color:white; font-weight:bold; cursor:pointer; background:${isRev?'#2ec4b6':'#ff9f1c'}" onclick="toggleReview()">
+            let h = `<div id="revStatusBtn" class="card" style="justify-content:center; color:white; font-weight:bold; cursor:pointer; background:${isRev?'#2ec4b6':'#ff9f1c'}" onclick="toggleReview()">
                     ${isRev ? "✅ تمت المراجعة" : "⚠️ بانتظار المراجعة"}
                 </div>
-
                 <div class="card" style="display:block; background:#fff3cd; border:1px solid #ffeeba;">
-                    <b style="color:#856404; display:block; margin-bottom:10px; font-size:14px;">📅 حضور الطفل في (مجال ${selD}):</b>
+                    <b style="color:#856404; display:block; margin-bottom:10px; font-size:14px;">📅 حضور الطفل (مجال ${selD}):</b>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap:5px;">
                         ${days.map(day => `
                             <div style="font-size:11px; text-align:center; background:white; padding:5px; border-radius:8px; border:1px solid #ddd;">
                                 <b>${day}</b>
-                                <select onchange="updateChildDayAtt('${day}', this.value)" style="margin-top:5px; font-size:10px; padding:2px; width:100%;">
+                                <select onchange="updateChildDayAtt('${day}', this.value)" style="margin-top:5px; font-size:10px; padding:2px;">
                                     <option value="حضر" ${attData[day]=='حضر'?'selected':''}>حضر</option>
                                     <option value="تأخر > 15د" ${attData[day]=='تأخر > 15د'?'selected':''}>تأخر > 15د</option>
                                     <option value="تأخر < 15د" ${attData[day]=='تأخر < 15د'?'selected':''}>تأخر < 15د</option>
                                     <option value="غياب" ${attData[day]=='غياب'?'selected':''}>غياب</option>
                                     <option value="إجازة" ${attData[day]=='إجازة'?'selected':''}>إجازة</option>
                                 </select>
-                            </div>
-                        `).join('')}
+                            </div>`).join('')}
                     </div>
                 </div>
-
                 <input id="gT" placeholder="اسم الهدف..."><button class="btn" onclick="addG()">+ إضافة هدف</button><hr>`;
             
             for(let [gn, gsData] of sortedGoals) {
-                let dN = gn.split("|ID|")[0]; let sN = gn.split("|ID|")[1] || "عام";
-                h += `
-                <div class="card" style="display:block; border-right: 5px solid ${sN === currUser ? 'var(--ok)' : '#ccc'}">
+                let dN = gn.split("|ID|")[0], sN = gn.split("|ID|")[1] || "عام";
+                h += `<div class="card" style="display:block; border-right: 5px solid ${sN === currUser ? 'var(--ok)' : '#ccc'}">
                     <div style="display:flex; justify-content:space-between;"><b>🎯 ${dN}</b> <small>👤 ${sN}</small></div>
                     <div style="float:left;"><button onclick="editG('${gn}')" style="border:none; background:none; color:var(--p)">📝</button><button onclick="toBinG('${gn}')" style="border:none; background:none; color:red">🗑️</button></div>
                     <div style="display:flex; gap:5px; margin-top:5px">
                         <select onchange="upG('${gn}','h',this.value)"><option>المساعدة</option>${["FP","PP","FV","PV","M","G","P","V"].map(o=>`<option value="${o}" ${gsData.h==o?'selected':''}>${o}</option>`).join('')}</select>
-                        <select onchange="upG('${gn}','p',this.value)"><option value="جاري التدريب" ${gsData.p=='جاري التدريب'?'selected':''}>جاري التدريب</option>${[0,10,20,30,40,50,60,70,80,90,100].map(p=>`<option value="${p}" ${gsData.p==p?'selected':''}>${p}%</option>`).join('')}</select>
-                        <select onchange="upG('${gn}','g',this.value)" style="background:#e3f2fd">
-                            <option value="لا" ${gsData.g=='نعم'?'':'selected'}>تعميم ❌</option>
-                            <option value="نعم" ${gsData.g=='نعم'?'selected':''}>تعميم ✅</option>
-                        </select>
+                        <select onchange="upG('${gn}','p',this.value)"><option value="جاري">جاري</option>${[0,10,20,30,40,50,60,70,80,90,100].map(p=>`<option value="${p}" ${gsData.p==p?'selected':''}>${p}%</option>`).join('')}</select>
+                        <select onchange="upG('${gn}','g',this.value)" style="background:#e3f2fd"><option value="لا" ${gsData.g=='نعم'?'':'selected'}>تعميم ❌</option><option value="نعم" ${gsData.g=='نعم'?'selected':''}>تعميم ✅</option></select>
                     </div>
                 </div>`;
             }
@@ -188,169 +176,129 @@
         }
     }
 
-    // --- الدوال المساعدة ---
-    function updateChildDayAtt(day, val) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/attendance/${day}`).set(val); }
-
+    // --- الدوال الأساسية ---
     function login() {
         let u = document.getElementById('uIn').value, p = document.getElementById('pIn').value;
-        let isStf = Object.values(staffs).find(x => x.u === u && x.p === p);
-        if ((u === 'mostafa' && p === '2016') || (u === 'hassan' && p === '1234') || isStf) {
+        if ((u === 'mostafa' && p === '2016') || (staffs[u] && staffs[u].p === p)) {
             currUser = u; localStorage.setItem('currUser', u); showApp();
         } else alert('خطأ في البيانات');
     }
-
     window.onload = () => { if (localStorage.getItem('currUser')) { currUser = localStorage.getItem('currUser'); showApp(); } };
-    function logout() { if(confirm("خروج؟")) { localStorage.removeItem('currUser'); location.reload(); } }
+    function logout() { localStorage.removeItem('currUser'); location.reload(); }
     function addC() { let n = document.getElementById('cN').value.trim(); if(n) dbRef.child(n).set({ exists: true }); }
-    function addG() { 
-        let t = document.getElementById('gT').value.trim(); 
-        if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t + " |ID|" + currUser}`).set({ h: '', p: 0, g: 'لا' }).then(() => render());
-    }
+    function addG() { let t = document.getElementById('gT').value.trim(); if(t) dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t + " |ID|" + currUser}`).set({ h: '', p: 0, g: 'لا' }).then(() => render()); }
     function upG(gn, f, v) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v); }
+    function updateChildDayAtt(day, val) { dbRef.child(`${selC}/${selM}/${selW}/${selD}/attendance/${day}`).set(val); }
     function toggleReview() {
-        const seniors = ["أشرف", "محمد رمضان", "اسماء أحمد", "نورهان", "فاطمة", "mostafa", "hassan"];
-        if (!seniors.includes(currUser)) return alert("للسينيور فقط");
         let p = `${selC}/${selM}/${selW}/${selD}/isReviewed`;
-        dbRef.child(p).once('value', s => dbRef.child(p).set(!s.val()).then(() => render()));
+        dbRef.child(p).once('value', s => dbRef.child(p).set(!s.val()));
     }
-    function fullBackupJSON() { dbRef.once('value').then(s => { const blob = new Blob([JSON.stringify(s.val(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup.json`; a.click(); }); }
-    function fullRestoreJSON(e) { const reader = new FileReader(); reader.onload = (ev) => dbRef.set(JSON.parse(ev.target.result)).then(() => location.reload()); reader.readAsText(e.target.files[0]); }
-    function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
-    
-    function closeReport() { document.getElementById('repDiv').style.display = 'none'; document.getElementById('repDiv').classList.remove('active'); document.getElementById('app').style.display = 'block'; }
-
-    function editG(oldName) {
-        let realName = oldName.split("|ID|")[0];
-        let staffID = oldName.split("|ID|")[1] || "عام";
-        let newName = prompt("تعديل اسم الهدف:", realName);
-        if (newName && newName.trim() !== "" && newName !== realName) {
-            let path = `${selC}/${selM}/${selW}/${selD}`;
-            let data = db[selC][selM][selW][selD][oldName];
-            let newFullName = newName.trim() + " |ID|" + staffID;
-            dbRef.child(`${path}/${newFullName}`).set(data).then(() => { dbRef.child(`${path}/${oldName}`).remove(); render(); });
+    function toBinG(gn) {
+        if(confirm("نقل للسلة؟")) {
+            let d = db[selC][selM][selW][selD][gn];
+            bnRef.child(gn).set({ d, c: selC, m: selM, w: selW, dm: selD }).then(() => dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove());
         }
     }
-
-    function toBinG(gn) { 
-        if(confirm(`هل تريد نقل الهدف للسلة؟`)) {
-            let gData = db[selC][selM][selW][selD][gn]; 
-            bnRef.child(gn).set({ type: 'g', d: gData, c: selC, m: selM, w: selW, dm: selD, by: currUser, deletedAt: new Date().toLocaleString() }).then(() => { dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}`).remove().then(() => render()); }); 
-        }
-    }
-
     function openBin() {
         bnRef.once('value', s => {
-            let data = s.val() || {};
-            let h = `<div style="padding:20px; background:white; min-height:100vh; direction:rtl; color:#333;">
-                <button class="btn" onclick="closeReport()">❌ إغلاق السلة</button>
-                <h2 style="margin:20px 0;">🗑️ سلة المحذوفات</h2>`;
-            for(let id in data) {
-                let item = data[id];
-                h += `<div class="card" style="display:block; border-bottom:2px solid #eee;">
-                    <b>🎯 الهدف: ${id.split("|ID|")[0]}</b><br>
-                    <small>👶 الطفل: ${item.c} | ${item.m} - ${item.w}</small><br>
-                    <button class="btn" style="background:var(--ok); padding:5px; margin-top:5px;" onclick="restoreG('${id}')">🔄 استعادة</button>
-                </div>`;
-            }
+            let data = s.val() || {}, h = `<div style="padding:20px;"><h2>🗑️ السلة</h2><button class="btn" onclick="closeReport()">إغلاق</button>`;
+            for(let id in data) h += `<div class="card">${id.split("|ID|")[0]} <button onclick="restoreG('${id}')">استعادة</button></div>`;
             document.getElementById('repDiv').innerHTML = h + '</div>';
             document.getElementById('repDiv').style.display = 'block';
         });
     }
-
     function restoreG(id) {
         bnRef.child(id).once('value', s => {
-            let item = s.val();
-            dbRef.child(`${item.c}/${item.m}/${item.w}/${item.dm}/${id}`).set(item.d).then(() => { bnRef.child(id).remove(); openBin(); alert("تمت الاستعادة"); });
+            let i = s.val();
+            dbRef.child(`${i.c}/${i.m}/${i.w}/${i.dm}/${id}`).set(i.d).then(() => bnRef.child(id).remove().then(() => openBin()));
         });
     }
+    function closeReport() { document.getElementById('repDiv').style.display='none'; document.getElementById('app').style.display='block'; }
+    function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
 
-    // --- تقارير ---
+    // --- التقارير ---
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
-        if(!data) return alert("لا توجد بيانات");
-        let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
-            <div id="pdfContent" style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
-                <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN</h1>
-                <h3 style="text-align:center; color:#555;">تقرير متابعة الأسبوع: ${selW}</h3>
-                <div style="display:flex; justify-content:space-between; margin:20px 0; background:#f8f9fa; padding:15px; border-radius:10px;">
-                    <span><b>👤 الطفل:</b> ${selC}</span>
-                    <span><b>📅 الشهر:</b> ${selM}</span>
-                </div>
-                <table style="width:100%; border-collapse:collapse;" border="1">
-                    <thead><tr style="background:#4361ee; color:white;"><th style="padding:10px;">المجال والهدف التدريبي</th><th style="padding:10px;">المساعدة</th><th style="padding:10px;">الإنجاز</th></tr></thead>
-                    <tbody>`;
+        let h = `<div style="padding:20px; direction:rtl;">
+            <h2 style="text-align:center;">مركز I CAN - تقرير الأسبوع</h2>
+            <p>الطفل: ${selC} | الأسبوع: ${selW}</p>`;
+        
+        // إضافة جدول الحضور في التقرير
+        h += `<table border="1" style="width:100%; border-collapse:collapse; margin-bottom:20px; background:#fff3cd;">
+                <tr><th colspan="5">سجل الحضور في مجال ${selD}</th></tr>
+                <tr><th>الأحد</th><th>الاثنين</th><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th></tr>
+                <tr>`;
+        ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"].forEach(day => {
+            let status = data[selD]?.attendance?.[day] || "حضر";
+            h += `<td style="text-align:center;">${status}</td>`;
+        });
+        h += `</tr></table>`;
+
+        h += `<table border="1" style="width:100%; border-collapse:collapse;">
+                <tr style="background:#eee;"><th>الهدف</th><th>المساعدة</th><th>الإنجاز</th></tr>`;
         for(let d in data) {
             for(let g in data[d]) {
-                if(g === 'isReviewed' || g === 'attendance') continue;
-                let gData = data[d][g];
-                h += `<tr><td style="padding:10px; border:1px solid #ddd;"><b>${g.split("|ID|")[0]}</b> <br><small>(${d})</small></td><td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.h || '-'}</td><td style="padding:10px; border:1px solid #ddd; text-align:center;">${gData.p || 0}%</td></tr>`;
+                if(g==='isReviewed' || g==='attendance') continue;
+                let gd = data[d][g];
+                h += `<tr><td>${g.split("|ID|")[0]} (${d})</td><td>${gd.h}</td><td>${gd.p}%</td></tr>`;
             }
         }
-        h += `</tbody></table></div>
-            <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
-                <button class="btn" style="background:#4361ee;" onclick="window.print()">🖨️ طباعة</button>
-                <button class="btn" style="background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
-            </div></div>`;
-        document.getElementById('app').style.display = 'none'; document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display = 'block';
+        h += `</table><button class="btn no-print" onclick="window.print()">طباعة</button><button class="btn no-print" onclick="closeReport()">إغلاق</button></div>`;
+        document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
 
     function exportMonthlyRep() {
-        let monthData = db[selC][selM];
-        if(!monthData) return alert("لا توجد بيانات");
-        let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
-            <div id="pdfContent" style="border:4px double #4361ee; padding:20px; border-radius:15px;">
-                <h1 style="text-align:center; color:#4361ee; margin-bottom:5px;">مركز I CAN</h1>
-                <h2 style="text-align:center; color:#2ecc71; margin-top:0;">التقرير الشهري الشامل</h2>
-                <div style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px;">
-                    <p><b>👤 الطفل:</b> ${selC}</p>
-                    <p><b>📅 الشهر:</b> ${selM}</p>
-                </div>
-                <table style="width:100%; border-collapse:collapse;" border="1">
-                    <thead><tr style="background:#f1f1f1;"><th>المجال والهدف</th><th style="width:80px;">المساعدة</th><th style="width:80px;">الإنجاز</th></tr></thead>
-                    <tbody>`;
-        let summary = {};
-        [1, 2, 3, 4, 5].forEach(n => {
+        let mData = db[selC][selM];
+        let h = `<div style="padding:20px; direction:rtl;"><h2>التقرير الشهري: ${selM}</h2>`;
+        let sum = {};
+        [1,2,3,4,5].forEach(n => {
             let wk = "الاسبوع " + n;
-            if(monthData[wk]) {
-                for(let d in monthData[wk]) {
-                    if(!summary[d]) summary[d] = [];
-                    for(let g in monthData[wk][d]) { if(g !== 'isReviewed' && g !== 'attendance') summary[d].push({ name: g, data: monthData[wk][d][g] }); }
+            if(mData[wk]) {
+                for(let d in mData[wk]) {
+                    if(!sum[d]) sum[d] = [];
+                    for(let g in mData[wk][d]) {
+                        if(g!=='isReviewed' && g!=='attendance') sum[d].push({n:g, d:mData[wk][d][g]});
+                    }
                 }
             }
         });
-        for(let d in summary) {
-            h += `<tr style="background:#eef2ff;"><td colspan="3" style="padding:10px; font-weight:bold; color:#4361ee;">📁 مجال: ${d}</td></tr>`;
-            summary[d].forEach(obj => { h += `<tr><td style="padding:10px; border:1px solid #ddd;">• ${obj.name.split("|ID|")[0]}</td><td style="text-align:center;">${obj.data.h || '-'}</td><td style="text-align:center; font-weight:bold; color:#2ecc71;">${obj.data.p || 0}%</td></tr>`; });
+        for(let d in sum) {
+            h += `<h3>📁 ${d}</h3><table border="1" style="width:100%;">`;
+            sum[d].forEach(i => { h += `<tr><td>${i.n.split("|ID|")[0]}</td><td>${i.d.p}%</td></tr>`; });
+            h += `</table>`;
         }
-        h += `</tbody></table></div>
-            <div class="no-print" style="margin-top:20px; display:flex; gap:10px;">
-                <button class="btn" style="background:#4361ee;" onclick="window.print()">🖨️ طباعة</button>
-                <button class="btn" style="background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
-            </div></div>`;
-        document.getElementById('app').style.display = 'none'; document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display = 'block';
+        h += `<button class="btn no-print" onclick="window.print()">طباعة</button><button class="btn no-print" onclick="closeReport()">إغلاق</button></div>`;
+        document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
 
     function exportAnnualRep() {
-        let childData = db[selC]; if(!childData) return alert("لا توجد بيانات");
+        let childData = db[selC];
         let months = Object.keys(childData).filter(m => m !== 'exists');
-        let monthlyScores = [], labels = [];
+        let scores = [], labels = [];
         months.forEach(m => {
-            let totalP = 0, count = 0;
+            let total = 0, count = 0;
             for(let w in childData[m]) {
                 for(let d in childData[m][w]) {
-                    for(let g in childData[m][w][d]) { if(g !== 'isReviewed' && g !== 'attendance') { totalP += parseInt(childData[m][w][d][g].p || 0); count++; } }
+                    for(let g in childData[m][w][d]) {
+                        if(g!=='isReviewed' && g!=='attendance') { total += parseInt(childData[m][w][d][g].p || 0); count++; }
+                    }
                 }
             }
-            monthlyScores.push(count > 0 ? (totalP / count).toFixed(1) : 0); labels.push(m);
+            scores.push(count > 0 ? (total/count).toFixed(1) : 0);
+            labels.push(m);
         });
-        let h = `<div id="finalReportView" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
-            <div id="pdfContent" style="border:5px double #3f37c9; padding:20px; border-radius:15px;">
-                <h1 style="text-align:center; color:#4361ee;">مركز I CAN</h1>
-                <h2 style="text-align:center; color:#f72585;">تطور الطفل السنوي</h2>
-                <div style="height:300px;"><canvas id="annualChart"></canvas></div>
-            </div><button class="btn" style="margin-top:20px;" onclick="closeReport()">❌ إغلاق</button></div>`;
-        document.getElementById('app').style.display = 'none'; document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display = 'block';
-        new Chart(document.getElementById('annualChart'), { type: 'line', data: { labels: labels, datasets: [{ label: 'التطور %', data: monthlyScores, borderColor: '#f72585', fill: true }] } });
+        let h = `<div style="padding:20px;"><h2>تطور الطفل السنوي: ${selC}</h2>
+            <div style="height:300px;"><canvas id="annualChart"></canvas></div>
+            <button class="btn" onclick="closeReport()">إغلاق</button></div>`;
+        document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
+        
+        setTimeout(() => {
+            new Chart(document.getElementById('annualChart'), {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'التطور %', data: scores, borderColor: '#f72585', tension: 0.3, fill: true, backgroundColor: 'rgba(247, 37, 133, 0.1)' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }, 300);
     }
 </script>
 </body>
