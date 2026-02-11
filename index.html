@@ -306,17 +306,23 @@
     function exportMonthlyRep() {
         let mData = db[selC][selM];
         let attCount = { "حضر": 0, "غياب": 0, "تأخر > 15د": 0, "تأخر < 15د": 0, "إجازة": 0 };
+        let daysList = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
         let sum = {};
 
+        // حساب الحضور والمجالات لكل أسابيع الشهر
         [1,2,3,4,5].forEach(n => {
             let wk = "الاسبوع " + n;
             if(mData?.[wk]) {
                 for(let d in mData[wk]) {
-                    if(mData[wk][d].attendance) {
-                        Object.values(mData[wk][d].attendance).forEach(status => { 
-                            if(attCount[status] !== undefined) attCount[status]++; 
+                    // حساب الحضور الذكي في التقرير الشهري
+                    if (doms.includes(d)) {
+                        daysList.forEach(day => {
+                            let status = (mData[wk][d].attendance && mData[wk][d].attendance[day]) ? mData[wk][d].attendance[day] : "حضر";
+                            if(attCount[status] !== undefined) attCount[status]++;
                         });
                     }
+                    
+                    // تجميع الأهداف وعمود المساعدة
                     if(!sum[d]) sum[d] = [];
                     for(let g in mData[wk][d]) {
                         if(g!=='isReviewed' && g!=='attendance') sum[d].push({n:g, d:mData[wk][d][g]});
@@ -328,15 +334,15 @@
         let h = `<div id="pdfContent" style="padding:20px; direction:rtl; font-family:sans-serif; background:white;">
             <div style="border:4px double #4361ee; padding:25px; border-radius:15px; background:white;">
                 <h1 style="text-align:center; color:#4361ee; margin:0; letter-spacing: 5px;">I &nbsp; CAN</h1>
-                <h2 style="text-align:center; color:#2ec4b6; margin-top:5px;">حصاد التطور الشهري</h2>
+                <h2 style="text-align:center; color:#2ec4b6; margin-top:5px;">حصاد التطور الشهري الشامل</h2>
                 
                 <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:#3f37c9">${selC}</span></p>
-                        <p style="margin:5px 0;"><b>📅 شهر:</b> ${selM}</p>
+                        <p style="margin:5px 0;"><b>📅 تقرير شهر:</b> ${selM}</p>
                     </div>
                     <div style="text-align:right; background:white; padding:10px; border-radius:8px; border:1px solid #90caf9; font-size:12px;">
-                        <b style="display:block; border-bottom:1px solid #eee; margin-bottom:5px; color:#4361ee;">📊 ملخص الحضور:</b>
+                        <b style="display:block; border-bottom:1px solid #eee; margin-bottom:5px; color:#4361ee;">📊 إحصائية الحضور الشهرية:</b>
                         <span>✅ حضور: ${attCount['حضر']}</span> | <span>❌ غياب: ${attCount['غياب']}</span><br>
                         <span>⏳ تأخير: ${attCount['تأخر > 15د'] + attCount['تأخر < 15د']}</span> | <span>🌴 إجازة: ${attCount['إجازة']}</span>
                     </div>
@@ -360,7 +366,7 @@
 
         h += `<div style="margin-top:40px; text-align:center; background:#f9f9f9; padding:20px; border-radius:15px; page-break-inside: avoid; border:1px dashed #4361ee;">
                 <h3 style="color:#4361ee; margin-top:0;">كلمة المركز لولي الأمر</h3>
-                <p>شكراً لكونكم جزءاً من رحلة نجاح بطلنا. نحن نؤمن بأن التعاون بيننا هو السر وراء هذا التطور الملحوظ.</p>
+                <p>نشكركم على ثقتكم الغالية، ونسعد دائماً بكوننا شركاء في تطور طفلكم. نحن نؤمن بأن كل تقدم صغير هو خطوة نحو مستقبل عظيم.</p>
                 <p style="font-weight:bold; color:#3f37c9;">مع تحيات إدارة مركز I &nbsp; CAN ✨</p>
             </div>
             </div></div>
