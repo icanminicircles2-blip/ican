@@ -235,14 +235,32 @@
     // --- التقرير الأسبوعي المطور ---
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
+        let attCount = { "حضر": 0, "غياب": 0, "تأخر > 15د": 0, "تأخر < 15د": 0, "إجازة": 0 };
+        
+        // تجميع الحضور من كل المجالات في هذا الأسبوع
+        for(let d in data) {
+            if(data[d].attendance) {
+                Object.values(data[d].attendance).forEach(status => { 
+                    if(attCount[status] !== undefined) attCount[status]++; 
+                });
+            }
+        }
+
         let h = `<div id="pdfContent" style="padding:20px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif; background:white;">
             <div style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white;">
                 <h1 style="text-align:center; color:#4361ee; margin:0; letter-spacing: 5px;">I &nbsp; CAN</h1>
                 <h3 style="text-align:center; color:#555; margin-bottom:20px;">تقرير المتابعة الأسبوعي</h3>
                 
-                <div style="display:flex; justify-content:space-between; background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb;">
-                    <span><b>👤 البطل:</b> ${selC}</span>
-                    <span><b>📅 الأسبوع:</b> ${selW} (${selM})</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb;">
+                    <div>
+                        <p style="margin:5px 0;"><b>👤 البطل:</b> ${selC}</p>
+                        <p style="margin:5px 0;"><b>📅 الأسبوع:</b> ${selW} (${selM})</p>
+                    </div>
+                    <div style="text-align:right; background:white; padding:10px; border-radius:8px; border:1px solid #90caf9; font-size:12px;">
+                        <b style="display:block; border-bottom:1px solid #eee; margin-bottom:5px; color:#4361ee;">📊 حضور الأسبوع:</b>
+                        <span>✅ حضور: ${attCount['حضر']}</span> | <span>❌ غياب: ${attCount['غياب']}</span><br>
+                        <span>⏳ تأخير: ${attCount['تأخر > 15د'] + attCount['تأخر < 15د']}</span>
+                    </div>
                 </div>
 
                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
@@ -268,9 +286,10 @@
         }
         
         h += `</tbody></table>
-                <div style="text-align:center; padding:15px; background:#f8f9fa; border-radius:10px;">
+                <div style="text-align:center; padding:15px; background:#f8f9fa; border-radius:10px; border:1px dashed #4361ee;">
                     <p style="color:#3f37c9; font-weight:bold; margin:0;">✨ "نحن لا نرى إعاقة، بل نرى بطلاً يتحدى الصعاب.. فخورون بك يا ${selC}" ✨</p>
                 </div>
+                <p style="text-align:center; font-weight:bold; color:#4361ee; margin-top:15px;">مع تحيات إدارة مركز I &nbsp; CAN</p>
             </div>
         </div>
         <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px; z-index:10001;">
