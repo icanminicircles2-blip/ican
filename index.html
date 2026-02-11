@@ -216,19 +216,40 @@
     function closeReport() { document.getElementById('repDiv').style.display='none'; document.getElementById('app').style.display='block'; }
     function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
 
-    // --- تقارير مركز I CAN المحدثة ---
+    // --- دالة تحويل التقرير لـ PDF احترافي متعدد الصفحات ---
+    function generatePDF(filename) {
+        const element = document.getElementById('pdfContent');
+        const opt = {
+            margin: [0.5, 0.5],
+            filename: filename + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+        
+        // إظهار رسالة انتظار بسيطة
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "جاري التحميل...";
+        btn.disabled = true;
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    }
+
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
-        let h = `<div id="pdfContent" style="padding:30px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif; background:white; min-height:100vh;">
-            <div style="border:3px solid var(--p); padding:20px; border-radius:20px;">
-                <div style="text-align:center; margin-bottom:20px;">
-                    <h1 style="color:var(--p); margin:0;">مركز I CAN للقدرات الخاصة</h1>
-                    <h3 style="color:#555;">تقرير المتابعة الأسبوعي</h3>
-                </div>
+        let h = `<div id="pdfContent" style="padding:20px; direction:rtl; font-family:'Segoe UI', Tahoma, sans-serif; background:white;">
+            <div style="border:3px solid #4361ee; padding:20px; border-radius:15px; background:white; position:relative;">
+                <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN للقدرات الخاصة</h1>
+                <h3 style="text-align:center; color:#555; margin-bottom:20px;">تقرير متابعة الأسبوع: ${selW}</h3>
                 
                 <div style="display:flex; justify-content:space-between; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #ddd;">
                     <span><b>👤 اسم البطل:</b> ${selC}</span>
-                    <span><b>📅 التاريخ:</b> ${selM} - ${selW}</span>
+                    <span><b>📅 التاريخ:</b> ${selM}</span>
                 </div>
 
                 <div style="background:#fff3cd; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #ffeeba;">
@@ -248,9 +269,9 @@
 
                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
                     <thead>
-                        <tr style="background:var(--p); color:white;">
+                        <tr style="background:#4361ee; color:white;">
                             <th style="padding:12px; border:1px solid #ddd;">المجال والهدف التدريبي</th>
-                            <th style="padding:12px; border:1px solid #ddd; width:100px;">نوع المساعدة</th>
+                            <th style="padding:12px; border:1px solid #ddd; width:100px;">المساعدة</th>
                             <th style="padding:12px; border:1px solid #ddd; width:80px;">الإنجاز</th>
                         </tr>
                     </thead>
@@ -263,23 +284,20 @@
                 h += `<tr>
                     <td style="padding:10px; border:1px solid #ddd;"><b>${g.split("|ID|")[0]}</b> <br><small style="color:#666;">(${d})</small></td>
                     <td style="padding:10px; border:1px solid #ddd; text-align:center;">${gd.h || '-'}</td>
-                    <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:var(--ok);">${gd.p}%</td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#2ec4b6;">${gd.p}%</td>
                 </tr>`;
             }
         }
         
         h += `</tbody></table>
                 <div style="margin-top:30px; border-top:2px solid #eee; padding-top:15px; text-align:center;">
-                    <p style="color:var(--s); font-weight:bold;">✨ "كل خطوة صغيرة هي إنجاز كبير في رحلة بطلنا .. فخورون بتقدمه المستمر" ✨</p>
-                    <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:14px; color:#666;">
-                        <span>توقيع الأخصائي: ...................</span>
-                        <span>اعتماد إدارة المركز: ...................</span>
-                    </div>
+                    <p style="color:#3f37c9; font-weight:bold;">✨ "كل خطوة صغيرة هي إنجاز كبير في رحلة بطلنا .. فخورون بتقدمه المستمر" ✨</p>
+                    <p style="font-weight:bold; color:#4361ee;">مع تحيات إدارة مركز I CAN</p>
                 </div>
             </div>
         </div>
-        <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px;">
-            <button class="btn" style="flex:1; background:var(--ok);" onclick="window.print()">🖨️ طباعة وإرسال لولي الأمر</button>
+        <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px; z-index:10001;">
+            <button class="btn" style="flex:1; background:#2ec4b6;" onclick="generatePDF('تقرير_أسبوعي_${selC}')">📥 حفظ PDF وإرسال</button>
             <button class="btn" style="flex:1; background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
         </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
@@ -287,11 +305,13 @@
 
     function exportMonthlyRep() {
         let mData = db[selC][selM];
-        let h = `<div id="pdfContent" style="padding:30px; direction:rtl; font-family:sans-serif; background:white;">
-            <div style="border:4px double var(--p); padding:25px; border-radius:15px;">
-                <h1 style="text-align:center; color:var(--p);">تقرير الحصاد الشهري - مركز I CAN</h1>
+        let h = `<div id="pdfContent" style="padding:20px; direction:rtl; font-family:sans-serif; background:white;">
+            <div style="border:4px double #4361ee; padding:25px; border-radius:15px; background:white;">
+                <h1 style="text-align:center; color:#4361ee; margin:0;">مركز I CAN للقدرات الخاصة</h1>
+                <h2 style="text-align:center; color:#2ec4b6; margin-top:5px;">تقرير الحصاد الشهري الشامل</h2>
+                
                 <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb;">
-                    <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:var(--s)">${selC}</span></p>
+                    <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:#3f37c9">${selC}</span></p>
                     <p style="margin:5px 0;"><b>📅 تقرير شهر:</b> ${selM}</p>
                 </div>`;
         
@@ -309,85 +329,28 @@
         });
 
         for(let d in sum) {
-            h += `<div style="margin-bottom:20px;">
-                <h3 style="background:var(--s); color:white; padding:8px; border-radius:5px;">📁 مجال: ${d}</h3>
+            h += `<div style="margin-bottom:20px; page-break-inside: avoid;">
+                <h3 style="background:#3f37c9; color:white; padding:8px; border-radius:5px; margin-bottom:10px;">📁 مجال: ${d}</h3>
                 <table style="width:100%; border-collapse:collapse;" border="1">
-                    <tr style="background:#f1f1f1;"><th>الهدف التدريبي</th><th style="width:100px;">نسبة الإنجاز</th></tr>`;
+                    <thead><tr style="background:#f1f1f1;"><th>الهدف التدريبي</th><th style="width:100px;">نسبة الإنجاز</th></tr></thead>
+                    <tbody>`;
             sum[d].forEach(i => {
-                h += `<tr><td style="padding:8px;">${i.n.split("|ID|")[0]}</td><td style="text-align:center; font-weight:bold; color:var(--ok);">${i.d.p}%</td></tr>`;
+                h += `<tr><td style="padding:8px;">${i.n.split("|ID|")[0]}</td><td style="text-align:center; font-weight:bold; color:#2ec4b6;">${i.d.p}%</td></tr>`;
             });
-            h += `</table></div>`;
+            h += `</tbody></table></div>`;
         }
 
-        h += `<div style="margin-top:40px; text-align:center; background:#f9f9f9; padding:20px; border-radius:15px;">
-                <h3 style="color:var(--p);">كلمة المركز لولي الأمر</h3>
-                <p>نشكركم على ثقتكم الغالية، ونسعد دائماً بكوننا شركاء في نجاح وتطور طفلكم. نحن هنا لندعم أحلامه خطوة بخطوة.</p>
+        h += `<div style="margin-top:40px; text-align:center; background:#f9f9f9; padding:20px; border-radius:15px; page-break-inside: avoid;">
+                <h3 style="color:#4361ee;">كلمة المركز لولي الأمر</h3>
+                <p>نشكركم على ثقتكم الغالية، ونسعد دائماً بكوننا شركاء في تطور طفلكم.</p>
                 <p style="font-weight:bold; margin-top:10px;">مع تحيات إدارة مركز I CAN ✨</p>
             </div>
             </div></div>
-            <div class="no-print" style="margin-top:20px; display:flex; gap:10px; padding:20px;">
-                <button class="btn" style="flex:1; background:var(--p);" onclick="window.print()">🖨️ طباعة التقرير الشهري</button>
+            <div class="no-print" style="position:fixed; bottom:20px; left:20px; right:20px; display:flex; gap:10px; z-index:10001;">
+                <button class="btn" style="flex:1; background:#4361ee;" onclick="generatePDF('تقرير_شهري_${selC}_${selM}')">📥 حفظ PDF التقرير الشهري</button>
                 <button class="btn" style="flex:1; background:#6c757d;" onclick="closeReport()">❌ إغلاق</button>
             </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
-    }
-
-    function exportAnnualRep() {
-        let childData = db[selC];
-        let months = Object.keys(childData).filter(m => m !== 'exists');
-        let scores = [], labels = [];
-        months.forEach(m => {
-            let total = 0, count = 0;
-            if(childData[m]) {
-                for(let w in childData[m]) {
-                    for(let d in childData[m][w]) {
-                        for(let g in childData[m][w][d]) {
-                            if(g!=='isReviewed' && g!=='attendance') { 
-                                let p = parseInt(childData[m][w][d][g].p || 0);
-                                total += p; count++; 
-                            }
-                        }
-                    }
-                }
-            }
-            scores.push(count > 0 ? (total/count).toFixed(1) : 0);
-            labels.push(m);
-        });
-
-        let h = `<div style="padding:30px; background:white; min-height:100vh; direction:rtl;">
-            <div style="border:5px double var(--s); padding:20px; border-radius:15px; text-align:center;">
-                <h1 style="color:var(--s);">حصاد التطور السنوي - I CAN</h1>
-                <h3>البطل: ${selC}</h3>
-                <div style="height:400px; margin:20px 0;"><canvas id="annualChart"></canvas></div>
-                <p style="margin-top:20px; font-style:italic;">هذا الرسم يوضح مدى التطور والتقدم الذي حققه طفلنا خلال العام</p>
-            </div>
-            <button class="btn no-print" style="margin-top:20px;" onclick="closeReport()">❌ إغلاق</button>
-        </div>`;
-        document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
-        
-        setTimeout(() => {
-            new Chart(document.getElementById('annualChart'), {
-                type: 'line',
-                data: { 
-                    labels: labels, 
-                    datasets: [{ 
-                        label: 'نسبة التطور المئوية', 
-                        data: scores, 
-                        borderColor: '#f72585', 
-                        backgroundColor: 'rgba(247, 37, 133, 0.2)',
-                        tension: 0.4, 
-                        fill: true,
-                        pointRadius: 6,
-                        pointBackgroundColor: '#f72585'
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'نسبة الإنجاز %' } } } 
-                }
-            });
-        }, 500);
     }
 </script>
 </body>
