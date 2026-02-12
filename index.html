@@ -82,10 +82,18 @@
     }
 
     function updateStaffUI() {
-        let h = '<b>قائمة الأخصائيين:</b>';
-        for(let id in staffs) h += `<div class="card"><span>👤 ${staffs[id].u}</span><button onclick="delStaff('${id}')" style="color:var(--err); border:none; background:none;">🗑️</button></div>`;
-        document.getElementById('staffListArea').innerHTML = h;
+    let h = '<b style="display:block; margin-bottom:10px;">👥 قائمة الأخصائيين:</b>';
+    for(let id in staffs) {
+        h += `<div class="card" style="display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                    <span>👤 <b>الاسم:</b> ${staffs[id].u}</span>
+                    <button onclick="delStaff('${id}')" style="color:var(--err); border:none; background:none; font-size:18px;">🗑️</button>
+                </div>
+                <small style="color:#666; margin-top:5px;">🔑 الباسورد: ${staffs[id].p}</small>
+              </div>`;
     }
+    document.getElementById('staffListArea').innerHTML = h;
+}
 
     function showApp() { 
         document.getElementById('loginPage').style.display='none'; 
@@ -103,7 +111,25 @@
             let h = `<input id="cN" placeholder="اسم الطفل..."><button class="btn" onclick="addC()">+ إضافة طفل</button><hr>
             <input type="text" placeholder="🔎 بحث..." oninput="filterChildren(this.value)">
             <div id="childrenList">`;
-            for(let n in db) h += `<div class="card child-card" data-name="${n}" onclick="selC='${n}'; view='p2'; render()"><b>👤 ${n}</b><button onclick="event.stopPropagation(); toBinC('${n}')" style="color:red; border:none; background:none;">🗑️</button></div>`;
+            for(let n in db) {
+                if(n === 'exists') continue; // تخطي أي بيانات مش أسماء أطفال
+                
+                let age = calculateAge(db[n].birthDate); // حساب العمر
+                
+                // السطور المسؤولة عن شكل الكارت (Cards) تبدأ من هنا:
+                h += `
+                <div class="card child-card" data-name="${n}" onclick="selC='${n}'; view='p2'; render()">
+                    <div style="text-align:right;">
+                        <b style="font-size:16px;">👤 ${n}</b> <br>
+                        <small style="color:var(--p); font-weight:bold;">🎂 العمر: ${age}</small>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="event.stopPropagation(); editC('${n}')" style="color:#4361ee; border:none; background:none; font-size:18px; cursor:pointer;">✏️</button>
+                        <button onclick="event.stopPropagation(); toBinC('${n}')" style="color:var(--err); border:none; background:none; font-size:18px; cursor:pointer;">🗑️</button>
+                    </div>
+                </div>`;
+                // تنتهي هنا
+            }
             area.innerHTML = h + '</div>';
         } 
         else if(view === 'p2') {
@@ -208,7 +234,65 @@
     }
     window.onload = () => { if (localStorage.getItem('currUser')) { currUser = localStorage.getItem('currUser'); showApp(); } };
     function logout() { localStorage.removeItem('currUser'); location.reload(); }
-    function addC() { let n = document.getElementById('cN').value.trim(); if(n) dbRef.child(n).set({ exists: true }); }
+    // إضافة طفل مع تاريخ الميلاد
+function addC() {
+        let n = document.getElementById('cN').value.trim();
+        if(!n) return alert("يرجى إدخال اسم الطفل أولاً");
+
+        // نافذة تطلب تاريخ الميلاد
+        let bDay = prompt("أدخل تاريخ ميلاد البطل (سنة-شهر-يوم)\nمثال: 2019-05-25", "2019-01-01");
+        
+        if(bDay) {
+            dbRef.child(n).set({ 
+                exists: true, 
+                birthDate: bDay 
+            }).then(() => {
+                document.getElementById('cN').value = "";
+                alert("تم إضافة البطل وتاريخ ميلاده بنجاح");
+                render();
+            });
+        } else {
+            alert("لازم تدخل تاريخ الميلاد عشان السيستم يحسب العمر");
+        }
+    }
+
+// تعديل بيانات الطفل (الاسم أو تاريخ الميلاد)
+function editC(oldName) {
+        let currentBirth = db[oldName].birthDate || "2019-01-01";
+        
+        let newName = prompt("تعديل اسم البطل:", oldName);
+        let newBirth = prompt("تعديل تاريخ الميلاد (سنة-شهر-يوم):", currentBirth);
+        
+        if(newName && newBirth) {
+            // لو الاسم اتغير، بننقل كل البيانات للاسم الجديد
+            if(newName !== oldName) {
+                dbRef.child(newName).set(db[oldName]).then(() => {
+                    dbRef.child(oldName).remove();
+                    dbRef.child(newName).update({ birthDate: newBirth });
+                    alert("تم تحديث البيانات بالاسم الجديد");
+                    render();
+                });
+            } else {
+                // لو الاسم هو هو بس التاريخ اتغير
+                dbRef.child(oldName).update({ birthDate: newBirth }).then(() => {
+                    alert("تم تحديث تاريخ الميلاد");
+                    render();
+                });
+            }
+        }
+    }
+function calculateAge(birthDate) {
+    if(!birthDate) return "غير مسجل";
+    let birth = new Date(birthDate);
+    let now = new Date();
+    let years = now.getFullYear() - birth.getFullYear();
+    let months = now.getMonth() - birth.getMonth();
+    if (months < 0 || (months === 0 && now.getDate() < birth.getDate())) {
+        years--;
+        months += 12;
+    }
+    return `${years} سنة و ${months} شهر`;
+}
     function addStaff() {
         let u = document.getElementById('stName').value.trim();
         let p = document.getElementById('stPass').value.trim();
@@ -266,32 +350,17 @@
     function closeReport() { document.getElementById('repDiv').style.display='none'; document.getElementById('app').style.display='block'; }
     function filterChildren(v) { document.querySelectorAll('.child-card').forEach(c => c.style.display = c.getAttribute('data-name').includes(v) ? 'flex' : 'none'); }
 
-    // --- دالة تحويل التقرير لـ PDF احترافي ---
-    function generatePDF(filename) {
-        const element = document.getElementById('pdfContent');
-        const opt = {
-            margin: [0.5, 0.3],
-            filename: filename + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-        const btn = event.target;
-        btn.innerText = "جاري التحميل...";
-        html2pdf().set(opt).from(element).save().then(() => { btn.innerText = "📥 حفظ PDF وإرسال"; });
-    }
-
-    // --- التقرير الأسبوعي المطور ---
+    // --- التقرير الأسبوعي المطور (معدل لإظهار السن) ---
     function exportWeeklyRep() {
         let data = db[selC][selM][selW];
+        // حساب السن للتقرير
+        let ageAtRep = calculateAge(db[selC].birthDate);
+        
         let attCount = { "حضر": 0, "غياب": 0, "تأخر > 15د": 0, "تأخر < 15د": 0, "إجازة": 0 };
         let daysList = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
         
-        // حساب الحضور: بنمر على كل مجال وبنشوف الأيام الـ 5
-        // لو مفيش داتا مسجلة ليوم معين، بنعتبره "حضر" تلقائياً
         for(let d in data) {
-            if (doms.includes(d)) { // نتأكد إننا بنعد المجالات فقط
+            if (doms.includes(d)) {
                 daysList.forEach(day => {
                     let status = (data[d].attendance && data[d].attendance[day]) ? data[d].attendance[day] : "حضر";
                     if(attCount[status] !== undefined) attCount[status]++;
@@ -306,7 +375,7 @@
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb;">
                     <div>
-                        <p style="margin:5px 0;"><b>👤 البطل:</b> ${selC}</p>
+                        <p style="margin:5px 0;"><b>👤 البطل:</b> ${selC} <small>(${ageAtRep})</small></p>
                         <p style="margin:5px 0;"><b>📅 الأسبوع:</b> ${selW} (${selM})</p>
                     </div>
                     <div style="text-align:right; background:white; padding:10px; border-radius:8px; border:1px solid #90caf9; font-size:12px;">
@@ -352,30 +421,31 @@
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
 
-    // --- التقرير الشهري المطور (مع الحضور وعمود المساعدة) ---
+    // --- التقرير الشهري المطور (معدل لإظهار السن وتجاهل جليتش exists) ---
     function exportMonthlyRep() {
         let mData = db[selC][selM];
+        // حساب السن للتقرير
+        let ageAtRep = calculateAge(db[selC].birthDate);
+        
         let attCount = { "حضر": 0, "غياب": 0, "تأخر > 15د": 0, "تأخر < 15د": 0, "إجازة": 0 };
         let daysList = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
         let sum = {};
 
-        // حساب الحضور والمجالات لكل أسابيع الشهر
         [1,2,3,4,5].forEach(n => {
             let wk = "الاسبوع " + n;
             if(mData?.[wk]) {
                 for(let d in mData[wk]) {
-                    // حساب الحضور الذكي في التقرير الشهري
                     if (doms.includes(d)) {
                         daysList.forEach(day => {
                             let status = (mData[wk][d].attendance && mData[wk][d].attendance[day]) ? mData[wk][d].attendance[day] : "حضر";
                             if(attCount[status] !== undefined) attCount[status]++;
                         });
                     }
-                    
-                    // تجميع الأهداف وعمود المساعدة
-                    if(!sum[d]) sum[d] = [];
-                    for(let g in mData[wk][d]) {
-                        if(g!=='isReviewed' && g!=='attendance') sum[d].push({n:g, d:mData[wk][d][g]});
+                    if(!sum[d] && d !== 'exists' && d !== 'birthDate') sum[d] = [];
+                    if(sum[d]) {
+                        for(let g in mData[wk][d]) {
+                            if(g!=='isReviewed' && g!=='attendance') sum[d].push({n:g, d:mData[wk][d][g]});
+                        }
                     }
                 }
             }
@@ -388,7 +458,7 @@
                 
                 <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #bbdefb; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:#3f37c9">${selC}</span></p>
+                        <p style="margin:5px 0; font-size:18px;"><b>👤 بطلنا المتميز:</b> <span style="color:#3f37c9">${selC}</span> <small>(${ageAtRep})</small></p>
                         <p style="margin:5px 0;"><b>📅 تقرير شهر:</b> ${selM}</p>
                     </div>
                     <div style="text-align:right; background:white; padding:10px; border-radius:8px; border:1px solid #90caf9; font-size:12px;">
@@ -426,11 +496,13 @@
             </div>`;
         document.getElementById('repDiv').innerHTML = h; document.getElementById('repDiv').style.display='block';
     }
+
+    // --- التقرير السنوي المطور (تجاهل جليتش exists + إظهار السن) ---
     function exportAnnualRep() {
         let childData = db[selC]; 
         if(!childData) return alert("لا توجد بيانات لهذا الطفل");
         
-        // جلب الشهور التي تحتوي على بيانات فقط وترتيبها
+        let ageAtRep = calculateAge(childData.birthDate);
         let monthsLabels = Object.keys(childData).filter(m => mons.includes(m));
         let monthlyScores = [];
         let labels = [];
@@ -439,6 +511,7 @@
             let totalP = 0, count = 0;
             for(let w in childData[m]) {
                 for(let d in childData[m][w]) {
+                    if(d === 'exists' || d === 'birthDate') continue;
                     for(let g in childData[m][w][d]) { 
                         if(g !== 'isReviewed' && g !== 'attendance') { 
                             let pValue = parseInt(childData[m][w][d][g].p || 0);
@@ -462,7 +535,7 @@
                 <h2 style="color:#f72585; margin-top:5px;">حصاد التطور السنوي - ${new Date().getFullYear()}</h2>
                 
                 <div style="background:#e3f2fd; padding:15px; border-radius:10px; margin:20px 0; border:1px solid #bbdefb;">
-                    <p style="margin:0; font-size:18px;"><b>👤 اسم بطلنا:</b> <span style="color:#3f37c9">${selC}</span></p>
+                    <p style="margin:0; font-size:18px;"><b>👤 اسم بطلنا:</b> <span style="color:#3f37c9">${selC}</span> <small>(${ageAtRep})</small></p>
                 </div>
                 
                 <div style="height:350px; width:100%; margin:20px 0;">
@@ -483,7 +556,6 @@
         document.getElementById('repDiv').innerHTML = h;
         document.getElementById('repDiv').style.display = 'block';
 
-        // تشغيل الرسم البياني بعد التأكد من ظهور العنصر
         setTimeout(() => {
             const canvas = document.getElementById('annualChart');
             if (canvas) {
