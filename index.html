@@ -89,6 +89,7 @@
             justify-content: center;
             padding: 20px;
             z-index: 9999;
+            overflow: auto;
         }
 
         .login-card {
@@ -102,6 +103,10 @@
             box-shadow: 0 30px 60px rgba(0,0,0,0.2);
             border: 1px solid rgba(255,255,255,0.5);
             animation: fadeInUp 0.8s;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        
         }
 
         @keyframes fadeInUp {
@@ -391,6 +396,32 @@
     const dbRef = firebase.database().ref();
     const stRef = firebase.database().ref('IC_STAFF_V1');
     const bnRef = firebase.database().ref('IC_BIN_V1');
+    // ========== ✅ أدوات كتابة آمنة (Transactions) لتفادي تعارض الكتابة المتزامنة ==========
+    function safeSet(path, value) {
+        return firebase.database().ref(path).transaction(() => value);
+    }
+
+    function safeMerge(path, patchObj) {
+        return firebase.database().ref(path).transaction(current => {
+            if (current === null || typeof current !== 'object') current = {};
+            // merge shallow
+            for (const k in patchObj) current[k] = patchObj[k];
+            // meta
+            if (!current._meta || typeof current._meta !== 'object') current._meta = {};
+            current._meta.updatedAt = Date.now();
+            current._meta.updatedBy = currUser || 'unknown';
+            return current;
+        });
+    }
+
+    function uniqueGoalKey(baseKey, containerObj) {
+        // containerObj: object of goals at domain level
+        if (!containerObj || typeof containerObj !== 'object' || !(baseKey in containerObj)) return baseKey;
+        let i = 2;
+        while ((baseKey + ` (${i})`) in containerObj) i++;
+        return baseKey + ` (${i})`;
+    }
+
 
     // ========== متغيرات عامة ==========
     let db = {};
@@ -482,18 +513,16 @@
             
             // تمرير تلقائي سلس - الحل السحري
             setTimeout(() => {
-                // التمرير إلى محتوى الإدارة بسلاسة
-                secureContent.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center',
-                    inline: 'nearest'
-                });
-                
-                // تأكيد إضافي للتمرير
-                window.scrollTo({
-                    top: secureContent.offsetTop + window.pageYOffset - 100,
-                    behavior: 'smooth'
-                });
+                // التمرير داخل كارت الدخول نفسه (حل مشكلة السّكرول)
+                const card = document.querySelector('.login-card');
+                if (card && secureContent) {
+                    card.scrollTo({
+                        top: secureContent.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                } else if (secureContent) {
+                    secureContent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }, 300);
             
             // رسالة ترحيب
@@ -857,25 +886,30 @@
     }
 
     // ========== إضافة هدف مع بصمة الأخصائي ==========
-    window.addG = function() { 
-        let t = document.getElementById('gT').value.trim(); 
-        if (t) {
-            dbRef.child(`${selC}/${selM}/${selW}/${selD}/${t} |ID| ${currUser}`).set({ 
-                h: 'FP', 
-                p: '0', 
-                g: 'لا' 
-            }).then(() => {
-                document.getElementById('gT').value = "";
-                Swal.fire({
-                    icon: 'success',
-                    title: 'تم الإضافة',
-                    text: 'تم إضافة الهدف بنجاح',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-                render();
+    window.addG = function() {
+        let t = document.getElementById('gT').value.trim();
+        if (!t) return;
+
+        const domainPath = `${selC}/${selM}/${selW}/${selD}`;
+        const goalsObj = (db[selC]?.[selM]?.[selW]?.[selD]) || {};
+        const baseKey = `${t} |ID| ${currUser}`;
+        const finalKey = uniqueGoalKey(baseKey, goalsObj);
+
+        const goalPath = `${domainPath}/${finalKey}`;
+        firebase.database().ref(goalPath).transaction(cur => {
+            if (cur !== null) return; // موجود بالفعل
+            return { h: 'FP', p: '0', g: 'لا', _meta: { createdAt: Date.now(), createdBy: currUser || 'unknown' } };
+        }).then(() => {
+            document.getElementById('gT').value = "";
+            Swal.fire({
+                icon: 'success',
+                title: 'تم الإضافة',
+                text: 'تم إضافة الهدف بنجاح',
+                timer: 1500,
+                showConfirmButton: false
             });
-        }
+            render();
+        });
     }
 
     // ========== تعديل الهدف مع خيارات جاري ومستمر ==========
@@ -966,23 +1000,23 @@
     }
 
     // ========== تحديث الهدف ==========
-    window.upG = function(gn, f, v) { 
-        dbRef.child(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`).set(v);
+    window.upG = function(gn, f, v) {
+        safeSet(`${selC}/${selM}/${selW}/${selD}/${gn}/${f}`, v);
     }
 
     // ========== تحديث الحضور ==========
-    window.updateChildDayAtt = function(day, val) { 
-        dbRef.child(`${selC}/${selM}/${selW}/${selD}/attendance/${day}`).set(val);
+    window.updateChildDayAtt = function(day, val) {
+        safeSet(`${selC}/${selM}/${selW}/${selD}/attendance/${day}`, val);
     }
 
     // ========== تبديل المراجعة ==========
     window.toggleReview = function() {
         let p = `${selC}/${selM}/${selW}/${selD}/isReviewed`;
-        dbRef.child(p).once('value', s => {
-            dbRef.child(p).set(!s.val());
+        firebase.database().ref(p).transaction(cur => !cur).then(res => {
+            const newVal = res.snapshot ? res.snapshot.val() : null;
             Swal.fire({
                 icon: 'success',
-                title: !s.val() ? 'تمت المراجعة ✅' : 'تم الفتح للمراجعة 🔄',
+                title: newVal ? 'تمت المراجعة ✅' : 'تم الفتح للمراجعة 🔄',
                 timer: 1500,
                 showConfirmButton: false
             });
